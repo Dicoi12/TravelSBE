@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TravelSBE.Models;
-using TravelSBE.Services;
+using TravelSBE.Services.Interfaces;
 
 namespace TravelSBE.Controllers
 {

@@ -1,4 +1,6 @@
-﻿using TravelSBE.Entity.Helper;
+﻿using AutoMapper;
+using TravelSBE.Entity;
+using TravelSBE.Entity.Helper;
 
 namespace TravelSBE.Models
 {

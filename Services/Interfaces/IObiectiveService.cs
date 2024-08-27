@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using TravelSBE.Entity;
 using TravelSBE.Models;
 
-namespace TravelSBE.Services
+namespace TravelSBE.Services.Interfaces
 {
     public interface IObjectiveService
     {

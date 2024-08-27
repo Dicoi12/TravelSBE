@@ -3,6 +3,7 @@ using TravelSBE.Data;
 using TravelSBE.Services;
 using TravelSBE.Mapper;
 using Microsoft.OpenApi.Models;
+using TravelSBE.Services.Interfaces;
 
 namespace TravelSBE
 {
@@ -42,6 +43,7 @@ namespace TravelSBE
 
             // Register your services here
             builder.Services.AddScoped<IObjectiveService, ObjectiveService>();
+            builder.Services.AddScoped<IUserService, UserService>();
 
             // Configurarea aplicației
             builder.Services.AddSwaggerGen(c =>
