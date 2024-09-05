@@ -28,7 +28,11 @@ namespace TravelSBE.Services
             string salt = PasswordHelper.CreateSalt();
             string hash = PasswordHelper.HashPassword(request.Password, salt);
 
-            var user = _mapper.Map<User>(request);
+            User user = new User
+            {
+                Email = request.Email,
+                UserName = request.UserName,
+            };
             user.Salt = salt;
             user.Hash = hash;
 

@@ -4,22 +4,24 @@ using TravelSBE.Services.Interfaces;
 
 namespace TravelSBE.Controllers
 {
+    [Route("api/User")]
     [ApiController]
-    [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
+
         public UserController(IUserService userService)
         {
             _userService = userService;
         }
 
-        [HttpPost]
+        [HttpPost("Login")]
         public async Task<bool> Login(string userName, string password)
         {
             return await _userService.Login(userName, password);
         }
-        [HttpPost]
+
+        [HttpPost("SignUp")]
         public async Task<bool> SignUp(CreateUser request)
         {
             return await _userService.SignUp(request);
