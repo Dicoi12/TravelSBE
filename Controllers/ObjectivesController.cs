@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using TravelSBE.Models;
 using TravelSBE.Services.Interfaces;
+using TravelSBE.Utils;
 
 namespace TravelSBE.Controllers
 {
@@ -18,23 +19,19 @@ namespace TravelSBE.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ObjectiveModel>>> GetObjectives()
+        public async Task<ServiceResult<List<ObjectiveModel>>> GetObjectivesAsync()
         {
             var objectives = await _objectiveService.GetObjectivesAsync();
-            return Ok(objectives);
+            return objectives;
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<ObjectiveModel>> GetObjective(int id)
+        public async Task<ServiceResult<ObjectiveModel>> GetObjectiveByIdAsync(int id)
+
         {
             var objective = await _objectiveService.GetObjectiveByIdAsync(id);
 
-            if (objective == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(objective);
+            return objective;
         }
 
         [HttpPost]
@@ -42,7 +39,7 @@ namespace TravelSBE.Controllers
         {
             var createdObjective = await _objectiveService.CreateObjectiveAsync(objective);
 
-            return CreatedAtAction(nameof(GetObjective), new { id = createdObjective.Id }, createdObjective);
+            return CreatedAtAction(nameof(GetObjectiveByIdAsync), new { id = createdObjective.Id }, createdObjective);
         }
 
         [HttpPut("{id}")]
