@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TravelSBE")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ce2fabbfb40349753687ba4b50fb95f2e836d817")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0866508fe699129523ddfef7b8f3d7198288b71b")]
 [assembly: System.Reflection.AssemblyProductAttribute("TravelSBE")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TravelSBE")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
