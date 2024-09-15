@@ -1,4 +1,4 @@
-﻿namespace TravelSBE.Models.Enums
+﻿namespace TravelSBE.Enums
 {
     public enum UserRoleEnum
     {

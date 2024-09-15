@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using TravelSBE.Entity.Helper;
-using TravelSBE.Models.Enums;
+using TravelSBE.Enums;
 
 namespace TravelSBE.Entity
 {

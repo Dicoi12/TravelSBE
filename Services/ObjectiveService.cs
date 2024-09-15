@@ -37,18 +37,21 @@ namespace TravelSBE.Services
             return result;
         }
 
-        public async Task<ObjectiveModel> CreateObjectiveAsync(ObjectiveModel objective)
+        public async Task<ServiceResult<ObjectiveModel>> CreateObjectiveAsync(ObjectiveModel objective)
         {
+            ServiceResult<ObjectiveModel> result = new();
             objective.CreatedAt = DateTime.UtcNow;
             objective.UpdatedAt = DateTime.UtcNow;
             var mapped = _mapper.Map<Objective>(objective);
             _context.Objectives.Add(mapped);
             await _context.SaveChangesAsync();
-            return _mapper.Map<ObjectiveModel>(mapped);
+            result.Result = _mapper.Map<ObjectiveModel>(mapped);
+            return result;
         }
 
-        public async Task<ObjectiveModel> UpdateObjectiveAsync(ObjectiveModel objective)
+        public async Task<ServiceResult<ObjectiveModel>> UpdateObjectiveAsync(ObjectiveModel objective)
         {
+            ServiceResult<ObjectiveModel> result = new();
             if (!_context.Objectives.Any(e => e.Id == objective.Id))
             {
                 return new();
@@ -57,21 +60,23 @@ namespace TravelSBE.Services
             objective.UpdatedAt = DateTime.UtcNow;
             _context.Entry(objective).State = EntityState.Modified;
             await _context.SaveChangesAsync();
-            var result = _mapper.Map<ObjectiveModel>(objective);
+            result.Result = _mapper.Map<ObjectiveModel>(objective);
             return result;
         }
 
-        public async Task<bool> DeleteObjectiveAsync(int id)
+        public async Task<ServiceResult<bool>> DeleteObjectiveAsync(int id)
         {
+            ServiceResult<bool> result = new();
             var objective = await _context.Objectives.FindAsync(id);
             if (objective == null)
             {
-                return false;
+                result.Result= false;
             }
 
             _context.Objectives.Remove(objective);
             await _context.SaveChangesAsync();
-            return true;
+            result.Result= true;
+            return result;
         }
     }
 }

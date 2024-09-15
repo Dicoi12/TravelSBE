@@ -10,8 +10,8 @@ namespace TravelSBE.Services.Interfaces
     {
         Task<ServiceResult<List<ObjectiveModel>>> GetObjectivesAsync();
         Task<ServiceResult<ObjectiveModel>> GetObjectiveByIdAsync(int id);
-        Task<ObjectiveModel> CreateObjectiveAsync(ObjectiveModel objective);
-        Task<ObjectiveModel> UpdateObjectiveAsync(ObjectiveModel objective);
-        Task<bool> DeleteObjectiveAsync(int id);
+        Task<ServiceResult<ObjectiveModel>> CreateObjectiveAsync(ObjectiveModel objective);
+        Task<ServiceResult<ObjectiveModel>> UpdateObjectiveAsync(ObjectiveModel objective);
+        Task<ServiceResult<bool>> DeleteObjectiveAsync(int id);
     }
 }

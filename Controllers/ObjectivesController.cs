@@ -39,7 +39,7 @@ namespace TravelSBE.Controllers
         {
             var createdObjective = await _objectiveService.CreateObjectiveAsync(objective);
 
-            return CreatedAtAction(nameof(GetObjectiveByIdAsync), new { id = createdObjective.Id }, createdObjective);
+            return CreatedAtAction(nameof(GetObjectiveByIdAsync), new { id = createdObjective.Result.Id }, createdObjective);
         }
 
         [HttpPut("{id}")]
@@ -63,9 +63,9 @@ namespace TravelSBE.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteObjective(int id)
         {
-            var deleted = await _objectiveService.DeleteObjectiveAsync(id);
+            var result = await _objectiveService.DeleteObjectiveAsync(id);
 
-            if (!deleted)
+            if (!result.Result)
             {
                 return NotFound();
             }
