@@ -12,8 +12,8 @@ using TravelSBE.Data;
 namespace TravelSBE.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240905102805_OtherTables")]
-    partial class OtherTables
+    [Migration("20240917174915_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -90,11 +90,11 @@ namespace TravelSBE.Migrations
                     b.Property<int?>("IdObjective")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Latitude")
-                        .HasColumnType("text");
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision");
 
-                    b.Property<string>("Longitude")
-                        .HasColumnType("text");
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -134,12 +134,9 @@ namespace TravelSBE.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("IdUser");
 
                     b.ToTable("Itineraries");
                 });
@@ -359,7 +356,7 @@ namespace TravelSBE.Migrations
                 {
                     b.HasOne("TravelSBE.Entity.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("IdUser")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

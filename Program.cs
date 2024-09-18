@@ -27,21 +27,25 @@ namespace TravelSBE
                 });
                 options.ListenAnyIP(5094);
             });
-             builder.Services.AddCors(options =>
-    {
-        options.AddPolicy("AllowAllOrigins",
-            builder =>
+
+            builder.Services.AddCors(options =>
             {
-                builder.AllowAnyOrigin()
-                       .AllowAnyMethod()
-                       .AllowAnyHeader();
+                options.AddPolicy("AllowAllOrigins",
+                    builder =>
+                    {
+                        builder.AllowAnyOrigin()
+                               .AllowAnyMethod()
+                               .AllowAnyHeader();
+                    });
             });
-    });
+
             builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
 
             // Register your services here
             builder.Services.AddScoped<IObjectiveService, ObjectiveService>();
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IEventService, EventService>();
+            builder.Services.AddScoped<IObjectiveImageService, ObjectiveImageService>();
 
             builder.Services.AddSwaggerGen(c =>
             {
@@ -55,16 +59,23 @@ namespace TravelSBE
 
             var app = builder.Build();
 
+            // Aplica automat migrațiile la pornirea aplicației
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                dbContext.Database.Migrate(); // Asigură că migrațiile sunt aplicate
+            }
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
+
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "TravelSV1");
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "TravelSBE V1");
             });
-
 
             app.UseHttpsRedirection();
             app.UseAuthorization();

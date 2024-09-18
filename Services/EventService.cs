@@ -17,29 +17,50 @@ namespace TravelSBE.Services
             _context = context;
             _mapper = mapper;
         }
-        public async Task<ServiceResult<List<EventModel>>> GetEventByCityOrCoords(string? city, int? lat, int? lon)
+        public async Task<ServiceResult<List<EventModel>>> GetEventByCityOrCoords(string? city, double? lat, double? lon)
         {
             ServiceResult<List<EventModel>> result = new();
-            if (String.IsNullOrEmpty(city) || (lat == null && lon == null))
+            if (String.IsNullOrEmpty(city) && (lat == null || lon == null))
             {
-                result.ValidationMessage = "Oras invalid";
-                return result;
-            }
-            if (String.IsNullOrEmpty(city))
-            {
-                var events = await _context.Events.Where(x => x.City == city).ToListAsync();
-                var mapped = _mapper.Map<List<EventModel>>(events);
-                result.Result = mapped;
+                result.ValidationMessage = "Trebuie să specifici un oraș sau coordonatele.";
                 return result;
             }
 
+            List<Event> events;
+
+            if (!String.IsNullOrEmpty(city))
+            {
+                events = await _context.Events.Where(x => x.City == city).ToListAsync();
+            }
+            else
+            {
+                events = await _context.Events
+                                        .Where(x => x.Latitude == lat && x.Longitude == lon)
+                                        .ToListAsync();
+            }
+
+            var mapped = _mapper.Map<List<EventModel>>(events);
+            result.Result = mapped;
             return result;
         }
 
-        public Task<ServiceResult<EventModel>> GetEventByIdAsync(int id)
+
+        public async Task<ServiceResult<EventModel>> GetEventByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            ServiceResult<EventModel> result = new();
+            var entity = await _context.Events.FindAsync(id);
+
+            if (entity == null)
+            {
+                result.ValidationMessage = "Evenimentul nu a fost găsit.";
+                return result;
+            }
+
+            var mapped = _mapper.Map<EventModel>(entity);
+            result.Result = mapped;
+            return result;
         }
+
         public async Task<ServiceResult<EventModel>> AddEvent(EventModel request)
         {
             ServiceResult<EventModel> result = new ServiceResult<EventModel>();
@@ -56,22 +77,58 @@ namespace TravelSBE.Services
         public async Task<ServiceResult<EventModel>> UpdateEvent(EventModel request)
         {
             ServiceResult<EventModel> result = new ServiceResult<EventModel>();
-            if (request != null)
+
+            if (request == null)
             {
-                var entity = await _context.Events.Where(x => x.Id == request.Id).FirstOrDefaultAsync();
-                entity.StartDate = request.StartDate;
-                entity.EndDate = request.EndDate;
-                entity.City = request.City;
-                entity.Country = request.Country;
-                entity.Latitude = request.Latitude;
-                entity.Longitude = request.Longitude;
-                entity.Description = request.Description;
-                entity.Name = request.Name;
-                entity.IdObjective = request.IdObjective;
-                result.Result = request;
+                result.ValidationMessage = "Datele evenimentului sunt invalide.";
+                return result;
             }
+
+            var entity = await _context.Events.FindAsync(request.Id);
+
+            if (entity == null)
+            {
+                result.ValidationMessage = "Evenimentul nu a fost găsit.";
+                return result;
+            }
+
+            // Actualizează doar dacă e diferit
+            if (entity.StartDate != request.StartDate)
+                entity.StartDate = request.StartDate;
+            if (entity.EndDate != request.EndDate)
+                entity.EndDate = request.EndDate;
+            entity.City = request.City;
+            entity.Country = request.Country;
+            entity.Latitude = request.Latitude;
+            entity.Longitude = request.Longitude;
+            entity.Description = request.Description;
+            entity.Name = request.Name;
+            entity.IdObjective = request.IdObjective;
+
             await _context.SaveChangesAsync();
+            result.Result = request;
+
             return result;
         }
+        public async Task<ServiceResult<bool>> DeleteEvent(int id)
+        {
+            ServiceResult<bool> result = new();
+
+            var entity = await _context.Events.FindAsync(id);
+            if (entity == null)
+            {
+                result.ValidationMessage = "Evenimentul nu a fost găsit.";
+                result.Result = false;
+                return result;
+            }
+
+            _context.Events.Remove(entity);
+            await _context.SaveChangesAsync();
+
+            result.Result = true;
+            return result;
+        }
+
+
     }
 }

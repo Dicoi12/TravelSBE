@@ -11,8 +11,8 @@ namespace TravelSBE.Models
         public string Description { get; set; }
         public string Country { get; set; }
         public string City { get; set; }
-        public string? Latitude { get; set; }
-        public string? Longitude { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public int? IdObjective { get; set; }
