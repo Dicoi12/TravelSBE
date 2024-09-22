@@ -4,6 +4,7 @@ using TravelSBE.Services;
 using TravelSBE.Mapper;
 using Microsoft.OpenApi.Models;
 using TravelSBE.Services.Interfaces;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace TravelSBE
 {
@@ -26,6 +27,9 @@ namespace TravelSBE
                     listenOptions.UseHttps();
                 });
                 options.ListenAnyIP(5094);
+            });
+            builder.Services.Configure<FormOptions>(options => {
+                options.MultipartBodyLengthLimit = 104857600; // 100 MB
             });
 
             builder.Services.AddCors(options =>
@@ -56,6 +60,7 @@ namespace TravelSBE
                     Description = "An ASP.NET Core Web API for managing travel objectives"
                 });
             });
+
 
             var app = builder.Build();
 

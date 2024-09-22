@@ -10,7 +10,7 @@ namespace TravelSBE.Models
 
         public byte[] ImageData { get; set; }
         public string ImageMimeType { get; set; }
-        public int ObjectiveId { get; set; }
-        public Objective Objective { get; set; }
+        public int? IdObjective { get; set; }
+        public Objective? Objective { get; set; }
     }
 }

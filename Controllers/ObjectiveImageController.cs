@@ -1,7 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using TravelSBE.Models;
 using TravelSBE.Services.Interfaces;
 using TravelSBE.Utils;
+using System.IO;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace TravelSBE.Controllers
 {
@@ -16,36 +20,77 @@ namespace TravelSBE.Controllers
             _objectiveImageService = objectiveImageService;
         }
 
-        // Obține o imagine după ID
-        [HttpGet("{id}")]
-        public async Task<ServiceResult<ObjectiveImageModel>> GetImageById(int id)
+        [HttpPost]
+        [Route("addimage")]
+        public async Task<IActionResult> AddImage([FromForm] int objectiveId, [FromForm] IFormFile imageFile)
+        {
+            if (imageFile == null || imageFile.Length == 0)
+            {
+                return BadRequest("Invalid image file.");
+            }
+
+            using (var memoryStream = new MemoryStream())
+            {
+                await imageFile.CopyToAsync(memoryStream);
+                var imageData = memoryStream.ToArray();
+
+                var imageModel = new ObjectiveImageModel
+                {
+                    IdObjective = objectiveId,
+                    ImageData = imageData,
+                    ImageMimeType = imageFile.ContentType
+                };
+
+                var result = await _objectiveImageService.AddImageAsync(imageModel);
+
+                if (!string.IsNullOrEmpty(result.ValidationMessage))
+                {
+                    return BadRequest(result.ValidationMessage);
+                }
+
+                return Ok(result.Result);
+            }
+        }
+
+        [HttpGet]
+        [Route("getimage/{id}")]
+        public async Task<IActionResult> GetImage(int id)
         {
             var result = await _objectiveImageService.GetImageByIdAsync(id);
-            return result;
+
+            if (result.Result == null || !string.IsNullOrEmpty(result.ValidationMessage))
+            {
+                return NotFound(result.ValidationMessage ?? "Image not found.");
+            }
+            return File(result.Result.ImageData, result.Result.ImageMimeType);
         }
 
-        // Obține toate imaginile pentru un obiectiv specific
-        [HttpGet("objective/{objectiveId}")]
-        public async Task<ServiceResult<List<ObjectiveImageModel>>> GetImagesByObjectiveId(int objectiveId)
+        [HttpGet]
+        [Route("getimagesbyobjective/{objectiveId}")]
+        public async Task<IActionResult> GetImagesByObjective(int objectiveId)
         {
             var result = await _objectiveImageService.GetImagesByObjectiveIdAsync(objectiveId);
-            return result;
+
+            if (result.Result == null || result.Result.Count == 0)
+            {
+                return NotFound("No images found for this objective.");
+            }
+
+            return Ok(result.Result);
         }
 
-        // Adaugă o imagine pentru un obiectiv
-        [HttpPost]
-        public async Task<ServiceResult<ObjectiveImageModel>> AddImage([FromBody] ObjectiveImageModel imageModel)
-        {
-            var result = await _objectiveImageService.AddImageAsync(imageModel);
-            return result;
-        }
-
-        // Șterge o imagine după ID
-        [HttpDelete("{id}")]
-        public async Task<ServiceResult<bool>> DeleteImage(int id)
+        [HttpDelete]
+        [Route("deleteimage/{id}")]
+        public async Task<IActionResult> DeleteImage(int id)
         {
             var result = await _objectiveImageService.DeleteImageAsync(id);
-            return result;
+
+            if (!result.Result)
+            {
+                return NotFound(result.ValidationMessage ?? "Image not found.");
+            }
+
+            return Ok("Image deleted successfully.");
         }
     }
 }
