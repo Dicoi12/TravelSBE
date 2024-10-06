@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using TravelSBE.Dtos;
 using TravelSBE.Models;
 using TravelSBE.Services.Interfaces;
 
 namespace TravelSBE.Controllers
 {
-    [Route("api/User")]
+    [Route("api/[controller]")]
     [ApiController]
     public class UserController : ControllerBase
     {
@@ -16,9 +17,9 @@ namespace TravelSBE.Controllers
         }
 
         [HttpPost("Login")]
-        public async Task<bool> Login(string userName, string password)
+        public async Task<bool> Login([FromBody] LoginDto loginDto)
         {
-            return await _userService.Login(userName, password);
+            return await _userService.Login(loginDto.UserName, loginDto.Password);
         }
 
         [HttpPost("SignUp")]

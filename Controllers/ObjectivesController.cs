@@ -34,7 +34,7 @@ namespace TravelSBE.Controllers
             return objective;
         }
 
-        [HttpPost]
+        [HttpPost("PostObjective")]
         public async Task<ActionResult<ObjectiveModel>> PostObjective(ObjectiveModel objective)
         {
             var createdObjective = await _objectiveService.CreateObjectiveAsync(objective);

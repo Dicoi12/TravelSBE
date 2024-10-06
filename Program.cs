@@ -14,6 +14,17 @@ namespace TravelSBE
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // Configure CORS to allow requests from localhost:3000
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowFrontend",
+                    builder => builder.WithOrigins("http://localhost:5173")
+                                      .AllowAnyMethod()
+                                      .AllowAnyHeader()
+                                      .AllowCredentials());
+            });
+
+
             builder.Services.AddControllers();
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -26,21 +37,11 @@ namespace TravelSBE
                 {
                     listenOptions.UseHttps();
                 });
-                options.ListenAnyIP(5094);
-            });
-            builder.Services.Configure<FormOptions>(options => {
-                options.MultipartBodyLengthLimit = 104857600; // 100 MB
+                options.ListenAnyIP(5094); // HTTP
             });
 
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowAllOrigins",
-                    builder =>
-                    {
-                        builder.AllowAnyOrigin()
-                               .AllowAnyMethod()
-                               .AllowAnyHeader();
-                    });
+            builder.Services.Configure<FormOptions>(options => {
+                options.MultipartBodyLengthLimit = 104857600; // 100 MB
             });
 
             builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
@@ -61,14 +62,13 @@ namespace TravelSBE
                 });
             });
 
-
             var app = builder.Build();
 
-            // Aplica automat migrațiile la pornirea aplicației
+            // Apply migrations at startup
             using (var scope = app.Services.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                dbContext.Database.Migrate(); // Asigură că migrațiile sunt aplicate
+                dbContext.Database.Migrate(); // Ensure migrations are applied
             }
 
             if (app.Environment.IsDevelopment())
@@ -83,8 +83,10 @@ namespace TravelSBE
             });
 
             app.UseHttpsRedirection();
+
+            app.UseCors("AllowFrontend");
+
             app.UseAuthorization();
-            app.UseCors("AllowAllOrigins");
             app.MapControllers();
             app.Run();
         }
