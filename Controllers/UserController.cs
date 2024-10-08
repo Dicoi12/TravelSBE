@@ -17,7 +17,7 @@ namespace TravelSBE.Controllers
         }
 
         [HttpPost("Login")]
-        public async Task<bool> Login([FromBody] LoginDto loginDto)
+        public async Task<UserModel> Login([FromBody] LoginDto loginDto)
         {
             return await _userService.Login(loginDto.UserName, loginDto.Password);
         }

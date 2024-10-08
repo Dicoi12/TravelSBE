@@ -22,7 +22,7 @@ namespace TravelSBE.Services
         {
             if (await _context.Users.AnyAsync(u => u.UserName == request.UserName))
             {
-                return false; 
+                return false;
             }
 
             string salt = PasswordHelper.CreateSalt();
@@ -42,16 +42,25 @@ namespace TravelSBE.Services
             return true;
         }
 
-        public async Task<bool> Login(string username, string password)
+        public async Task<UserModel> Login(string username, string password)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName == username);
             if (user == null)
             {
-                return false;
+                return new UserModel();
             }
 
             bool isPasswordValid = PasswordHelper.VerifyPassword(password, user.Hash, user.Salt);
-            return isPasswordValid;
+            if (isPasswordValid)
+            {
+                var mapped = _mapper.Map<UserModel>(user);
+                return mapped;
+            }
+            else
+            {
+                return new UserModel();
+            }
         }
+
     }
 }

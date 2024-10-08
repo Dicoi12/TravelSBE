@@ -105,3 +105,4 @@ C:\Users\winko\OneDrive\Desktop\cSharp\TravelSBE\TravelSBE\obj\Debug\net8.0\refi
 C:\Users\winko\OneDrive\Desktop\cSharp\TravelSBE\TravelSBE\obj\Debug\net8.0\TravelSBE.pdb
 C:\Users\winko\OneDrive\Desktop\cSharp\TravelSBE\TravelSBE\obj\Debug\net8.0\TravelSBE.genruntimeconfig.cache
 C:\Users\winko\OneDrive\Desktop\cSharp\TravelSBE\TravelSBE\obj\Debug\net8.0\ref\TravelSBE.dll
+C:\Users\winko\OneDrive\Desktop\cSharp\TravelSBE\TravelSBE\bin\Debug\net8.0\Microsoft.AspNetCore.SpaServices.Extensions.dll

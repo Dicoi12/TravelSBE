@@ -21,5 +21,20 @@ namespace TravelSBE.Data
         public DbSet<Question> Questions { get; set; }
         public DbSet<Answer> Answers { get; set; }
         public DbSet<ObjectiveImage> ObjectiveImages { get; set; }
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            builder.Entity<User>()
+                .HasIndex(u => u.UserName)
+                .IsUnique();
+
+            builder.Entity<User>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
+
+            builder.Entity<User>()
+                .HasIndex(u => u.Phone)
+                .IsUnique();
+        }
+
     }
 }
