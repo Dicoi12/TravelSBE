@@ -18,7 +18,7 @@ namespace TravelSBE.Controllers
             _objectiveService = objectiveService;
         }
 
-        [HttpGet]
+        [HttpGet("GetObjectivesAsync")]
         public async Task<ServiceResult<List<ObjectiveModel>>> GetObjectivesAsync()
         {
             var objectives = await _objectiveService.GetObjectivesAsync();

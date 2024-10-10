@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Reflection.Emit;
+using System.Reflection.Metadata;
 using System.Security.AccessControl;
 using TravelSBE.Entity;
 
@@ -32,9 +34,17 @@ namespace TravelSBE.Data
                 .IsUnique();
 
             builder.Entity<User>()
-                .HasIndex(u => u.Phone)
-                .IsUnique();
+            .HasIndex(u => u.Phone)
+            .IsUnique();
+
+            builder.Entity<Objective>()
+                   .HasMany(e => e.Images)
+                   .WithOne(e => e.Objective)
+                   .HasForeignKey(e => e.IdObjective)
+                   .IsRequired();
         }
+
+
 
     }
 }

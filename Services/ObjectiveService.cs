@@ -24,7 +24,7 @@ namespace TravelSBE.Services
         public async Task<ServiceResult<List<ObjectiveModel>>> GetObjectivesAsync()
         {
             var result = new ServiceResult<List<ObjectiveModel>>();
-            var list = await _context.Objectives.ToListAsync();
+            var list = await _context.Objectives.Include(x=>x.Images).ToListAsync();
             result.Result = _mapper.Map<List<ObjectiveModel>>(list);
             return result;
         }
