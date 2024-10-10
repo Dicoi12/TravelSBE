@@ -1,0 +1,30 @@
+# Visual Studio specific
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build directories
+bin/
+obj/
+
+# Dependencies
+packages/
+
+# Logs and temporary files
+*.log
+*.tlog
+*.tmp
+*.cache
+*.pdb
+
+# Publish output
+publish/
+
+# Generated files
+*.g.*
+*.generated.cs
+
+# User secrets (if using)
+**/secrets.json
