@@ -4,7 +4,7 @@ using TravelSBE.Entity.Helper;
 
 namespace TravelSBE.Models
 {
-    public class ItineraryDetailModel:BaseAuditEntity
+    public class ItineraryDetailModel : BaseAuditEntity
     {
         public int Id { get; set; }
         public int? IdObjective { get; set; }

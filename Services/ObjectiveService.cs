@@ -70,12 +70,12 @@ namespace TravelSBE.Services
             var objective = await _context.Objectives.FindAsync(id);
             if (objective == null)
             {
-                result.Result= false;
+                result.Result = false;
             }
 
             _context.Objectives.Remove(objective);
             await _context.SaveChangesAsync();
-            result.Result= true;
+            result.Result = true;
             return result;
         }
     }

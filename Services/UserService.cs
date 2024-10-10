@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using TravelSBE.Data;
 using TravelSBE.Entity;
 using TravelSBE.Models;
 using TravelSBE.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace TravelSBE.Services
 {

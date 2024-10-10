@@ -1,6 +1,6 @@
-@TravelSBE_HostAddress = http://localhost:5094
+@TravelsBE_HostAddress = http://localhost:5279
 
-GET {{TravelSBE_HostAddress}}/weatherforecast/
+GET {{TravelsBE_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###

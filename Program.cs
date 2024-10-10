@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using TravelSBE.Data;
 using TravelSBE.Services;
 using TravelSBE.Mapper;
@@ -23,10 +23,10 @@ namespace TravelSBE
                                       .AllowAnyHeader()
                                       .AllowCredentials());
             });
-            builder.Services.AddSpaStaticFiles(configuration =>
-            {
-                configuration.RootPath = "ClientApp/dist";
-            });
+            //builder.Services.AddSpaStaticFiles(configuration =>
+            //{
+            //    configuration.RootPath = "ClientApp/dist";
+            //});
 
             builder.Services.AddControllers();
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -88,20 +88,11 @@ namespace TravelSBE
             app.UseHttpsRedirection();
 
             app.UseCors("AllowFrontend");
-            app.UseSpaStaticFiles();
+            //app.UseSpaStaticFiles();
 
             app.UseAuthorization();
             app.MapControllers();
-            app.UseSpa(spa =>
-            {
-                spa.Options.SourcePath = "ClientApp"; // path to your Vue project
-
-                if (app.Environment.IsDevelopment())
-                {
-                    // Start the Vite dev server (on localhost:5173)
-                    spa.UseProxyToSpaDevelopmentServer("http://localhost:5173");
-                }
-            });
+           
             app.Run();
         }
     }

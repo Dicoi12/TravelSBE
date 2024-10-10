@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
-using TravelSBE.Models;
 using TravelSBE.Entity;
+using TravelSBE.Models;
 
 namespace TravelSBE.Mapper
 {

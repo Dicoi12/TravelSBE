@@ -4,7 +4,7 @@ using TravelSBE.Entity.Helper;
 
 namespace TravelSBE.Models
 {
-    public class EventModel:BaseAuditEntity
+    public class EventModel : BaseAuditEntity
     {
         public int Id { get; set; }
         public string Name { get; set; }

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\winko\\OneDrive\\Desktop\\cSharp\\TravelSBE\\TravelSBE\\TravelSBE.csproj": {}
+    "C:\\Users\\winko\\Source\\Repos\\TravelSBE\\TravelsBE.csproj": {}
   },
   "projects": {
-    "C:\\Users\\winko\\OneDrive\\Desktop\\cSharp\\TravelSBE\\TravelSBE\\TravelSBE.csproj": {
+    "C:\\Users\\winko\\Source\\Repos\\TravelSBE\\TravelsBE.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\winko\\OneDrive\\Desktop\\cSharp\\TravelSBE\\TravelSBE\\TravelSBE.csproj",
-        "projectName": "TravelSBE",
-        "projectPath": "C:\\Users\\winko\\OneDrive\\Desktop\\cSharp\\TravelSBE\\TravelSBE\\TravelSBE.csproj",
+        "projectUniqueName": "C:\\Users\\winko\\Source\\Repos\\TravelSBE\\TravelsBE.csproj",
+        "projectName": "TravelsBE",
+        "projectPath": "C:\\Users\\winko\\Source\\Repos\\TravelSBE\\TravelsBE.csproj",
         "packagesPath": "C:\\Users\\winko\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\winko\\OneDrive\\Desktop\\cSharp\\TravelSBE\\TravelSBE\\obj\\",
+        "outputPath": "C:\\Users\\winko\\source\\repos\\TravelsBE\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\winko\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -50,23 +50,13 @@
               "target": "Package",
               "version": "[13.0.1, )"
             },
-            "AutoMapper.Extensions.Microsoft.DependencyInjection": {
-              "target": "Package",
-              "version": "[6.0.0, )"
-            },
             "Microsoft.AspNetCore.SpaServices.Extensions": {
               "target": "Package",
-              "version": "[8.0.8, )"
-            },
-            "Microsoft.EntityFrameworkCore.Design": {
-              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
-              "suppressParent": "All",
-              "target": "Package",
-              "version": "[8.0.7, )"
+              "version": "[8.0.10, )"
             },
             "Npgsql.EntityFrameworkCore.PostgreSQL": {
               "target": "Package",
-              "version": "[8.0.4, )"
+              "version": "[8.0.8, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
@@ -92,7 +82,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.303/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.400/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

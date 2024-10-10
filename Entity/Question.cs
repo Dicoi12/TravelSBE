@@ -19,6 +19,6 @@ namespace TravelSBE.Entity
         public Event? Event { get; set; }
         public string Text { get; set; }
         public DateTime DatePosted { get; set; } = DateTime.Now;
-            
+
     }
 }
