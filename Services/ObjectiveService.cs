@@ -24,10 +24,34 @@ namespace TravelSBE.Services
         public async Task<ServiceResult<List<ObjectiveModel>>> GetObjectivesAsync()
         {
             var result = new ServiceResult<List<ObjectiveModel>>();
-            var list = await _context.Objectives.Include(x=>x.Images).ToListAsync();
-            result.Result = _mapper.Map<List<ObjectiveModel>>(list);
+
+            var list = await _context.Objectives
+                .Include(x => x.Images)
+                .ToListAsync();
+
+            var objectiveModels = _mapper.Map<List<ObjectiveModel>>(list);
+
+            foreach (var objective in objectiveModels)
+            {
+                objective.Images = new List<string>();
+
+                // Căutăm obiectivul corespunzător în lista inițială
+                var originalObjective = list.First(x => x.Id == objective.Id);
+
+                foreach (var image in originalObjective.Images)
+                {
+                    // Adăugăm fiecare imagine convertită în base64
+                    string base64Image = Convert.ToBase64String(image.ImageData);
+                    objective.Images.Add($"data:{image.ImageMimeType};base64,{base64Image}");
+                }
+            }
+
+            result.Result = objectiveModels;
             return result;
         }
+
+
+
 
         public async Task<ServiceResult<ObjectiveModel>> GetObjectiveByIdAsync(int id)
         {
