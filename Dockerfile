@@ -1,22 +1,18 @@
 # Stage 1: Build the application
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build-env
 WORKDIR /app
 
-# Copy csproj and restore as distinct layers
+# Copy .csproj and restore as distinct layers
+COPY *.sln ./
 COPY *.csproj ./
 RUN dotnet restore
 
-# Copy everything else and build the app
+# Copy everything else and build
 COPY . ./
 RUN dotnet publish -c Release -o /out
 
-# Stage 2: Serve the application
-FROM mcr.microsoft.com/dotnet/aspnet:7.0
+# Stage 2: Build a runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS runtime
 WORKDIR /app
-COPY --from=build /out .
-
-# Expose the port that your API will listen on
-EXPOSE 80
-
-# Run the application
-ENTRYPOINT ["dotnet", "TravelSBE.dll"]
+COPY --from=build-env /out ./
+ENTRYPOINT ["dotnet", "TravelsBE.dll"]
