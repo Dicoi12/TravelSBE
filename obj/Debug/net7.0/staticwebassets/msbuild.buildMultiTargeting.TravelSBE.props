@@ -1,3 +1,3 @@
 ﻿<Project>
-  <Import Project="..\build\TravelSBE.props" />
+  <Import Project="..\build\TravelsBE.props" />
 </Project>
