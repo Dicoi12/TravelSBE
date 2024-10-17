@@ -1126,9 +1126,9 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\winko\\Source\\Repos\\TravelSBE\\TravelsBE.csproj",
+      "projectUniqueName": "C:\\Users\\winko\\source\\repos\\TravelSBE\\TravelsBE.csproj",
       "projectName": "TravelsBE",
-      "projectPath": "C:\\Users\\winko\\Source\\Repos\\TravelSBE\\TravelsBE.csproj",
+      "projectPath": "C:\\Users\\winko\\source\\repos\\TravelSBE\\TravelsBE.csproj",
       "packagesPath": "C:\\Users\\winko\\.nuget\\packages\\",
       "outputPath": "C:\\Users\\winko\\Source\\Repos\\TravelSBE\\obj\\",
       "projectStyle": "PackageReference",
@@ -1189,24 +1189,6 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
-        "downloadDependencies": [
-          {
-            "name": "Microsoft.AspNetCore.App.Ref",
-            "version": "[7.0.20, 7.0.20]"
-          },
-          {
-            "name": "Microsoft.NETCore.App.Host.win-x64",
-            "version": "[7.0.20, 7.0.20]"
-          },
-          {
-            "name": "Microsoft.NETCore.App.Ref",
-            "version": "[7.0.20, 7.0.20]"
-          },
-          {
-            "name": "Microsoft.WindowsDesktop.App.Ref",
-            "version": "[7.0.20, 7.0.20]"
-          }
-        ],
         "frameworkReferences": {
           "Microsoft.AspNetCore.App": {
             "privateAssets": "none"

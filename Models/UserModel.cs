@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using TravelSBE.Entity.Helper;
+using TravelSBE.Enums;
 
 namespace TravelSBE.Models
 {
@@ -9,5 +10,6 @@ namespace TravelSBE.Models
         public string UserName { get; set; }
         public string? Email { get; set; }
         public string? Phone { get; set; }
+        public UserRoleEnum Role { get; set; }
     }
 }
