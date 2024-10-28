@@ -18,21 +18,18 @@ namespace TravelSBE.Controllers
             _eventService = eventService;
         }
 
-        // GET: api/event/{id}
         [HttpGet("{id}")]
         public async Task<ServiceResult<EventModel>> GetEventById(int id)
         {
             return await _eventService.GetEventByIdAsync(id);
         }
 
-        // GET: api/event?city={city}&lat={latitude}&lon={longitude}
         [HttpGet]
         public async Task<ServiceResult<List<EventModel>>> GetEventsByCityOrCoords(string? city, int? lat, int? lon)
         {
             return await _eventService.GetEventByCityOrCoords(city, lat, lon);
         }
 
-        // POST: api/event
         [HttpPost]
         public async Task<ServiceResult<EventModel>> AddEvent([FromBody] EventModel request)
         {
@@ -48,7 +45,6 @@ namespace TravelSBE.Controllers
             return await _eventService.AddEvent(request);
         }
 
-        // PUT: api/event/{id}
         [HttpPut("{id}")]
         public async Task<ServiceResult<EventModel>> UpdateEvent(int id, [FromBody] EventModel request)
         {
@@ -64,7 +60,6 @@ namespace TravelSBE.Controllers
             return await _eventService.UpdateEvent(request);
         }
 
-        // DELETE: api/event/{id}
         [HttpDelete("{id}")]
         public async Task<ServiceResult<bool>> DeleteEvent(int id)
         {

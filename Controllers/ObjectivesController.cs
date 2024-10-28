@@ -24,6 +24,11 @@ namespace TravelSBE.Controllers
             var objectives = await _objectiveService.GetObjectivesAsync();
             return objectives;
         }
+        [HttpGet("GetLocalObjectives")]
+        public async Task<ServiceResult<List<ObjectiveModel>>> GetLocalObjectives(double latitude, double longitude)
+        {
+            return await _objectiveService.GetLocalObjectives(latitude, longitude);
+        }
 
         [HttpGet("{id}")]
         public async Task<ServiceResult<ObjectiveModel>> GetObjectiveByIdAsync(int id)

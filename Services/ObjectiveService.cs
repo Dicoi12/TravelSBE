@@ -61,6 +61,35 @@ namespace TravelSBE.Services
             return result;
         }
 
+        public async Task<ServiceResult<List<ObjectiveModel>>> GetLocalObjectives(double latitude, double longitude)
+        {
+            var result = new ServiceResult<List<ObjectiveModel>>();
+
+            var list = await _context.Objectives
+                .Include(x => x.Images)
+                .ToListAsync();
+
+            var objectiveModels = _mapper.Map<List<ObjectiveModel>>(list);
+
+            foreach (var objective in objectiveModels)
+            {
+                objective.Images = new List<string>();
+
+                var originalObjective = list.First(x => x.Id == objective.Id);
+
+                foreach (var image in originalObjective.Images)
+                {
+                    string base64Image = Convert.ToBase64String(image.ImageData);
+                    objective.Images.Add($"data:{image.ImageMimeType};base64,{base64Image}");
+                }
+
+                var distance = CalculateDistance(latitude, longitude, objective.Latitude, objective.Longitude);
+                objective.Distance = distance;
+            }
+
+            result.Result = objectiveModels.OrderBy(o => o.Distance).ToList();
+            return result;
+        }
         public async Task<ServiceResult<ObjectiveModel>> CreateObjectiveAsync(ObjectiveModel objective)
         {
             ServiceResult<ObjectiveModel> result = new();
@@ -102,5 +131,19 @@ namespace TravelSBE.Services
             result.Result = true;
             return result;
         }
+        private double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
+        {
+            const double R = 6371; // Radius of the Earth in km
+            var lat = (lat2 - lat1) * (Math.PI / 180);
+            var lon = (lon2 - lon1) * (Math.PI / 180);
+
+            var a = Math.Sin(lat / 2) * Math.Sin(lat / 2) +
+                    Math.Cos(lat1 * (Math.PI / 180)) * Math.Cos(lat2 * (Math.PI / 180)) *
+                    Math.Sin(lon / 2) * Math.Sin(lon / 2);
+
+            var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+            return R * c; // Distance in km
+        }
+
     }
 }
