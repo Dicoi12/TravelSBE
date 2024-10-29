@@ -47,14 +47,9 @@ namespace TravelSBE.Controllers
             return CreatedAtAction(nameof(GetObjectiveByIdAsync), new { id = createdObjective.Result.Id }, createdObjective);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutObjective(int id, ObjectiveModel objective)
+        [HttpPut("UpdateObjective")]
+        public async Task<IActionResult> PutObjective([FromQuery] ObjectiveModel objective)
         {
-            if (id != objective.Id)
-            {
-                return BadRequest();
-            }
-
             var updatedObjective = await _objectiveService.UpdateObjectiveAsync(objective);
 
             if (updatedObjective == null)

@@ -35,7 +35,6 @@ namespace TravelSBE.Services
             {
                 objective.Images = new List<string>();
 
-                // Căutăm obiectivul corespunzător în lista inițială
                 var originalObjective = list.First(x => x.Id == objective.Id);
 
                 foreach (var image in originalObjective.Images)
