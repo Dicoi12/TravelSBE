@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using TravelsBE.Dtos;
 using TravelSBE.Models;
 using TravelSBE.Services.Interfaces;
 using TravelSBE.Utils;
@@ -25,9 +26,9 @@ namespace TravelSBE.Controllers
             return objectives;
         }
         [HttpGet("GetLocalObjectives")]
-        public async Task<ServiceResult<List<ObjectiveModel>>> GetLocalObjectives(double latitude, double longitude)
+        public async Task<ServiceResult<List<ObjectiveModel>>> GetLocalObjectives([FromQuery] GetLocalObjectivesRequest paylaod)
         {
-            return await _objectiveService.GetLocalObjectives(latitude, longitude);
+            return await _objectiveService.GetLocalObjectives(paylaod.Latitude, paylaod.Latitude);
         }
 
         [HttpGet("{id}")]

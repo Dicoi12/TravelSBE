@@ -10,8 +10,10 @@ namespace TravelSBE.Models
         public int Id { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
-        public double Latitude { get; set; }
-        public double Longitude { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
         public List<string> Images { get; set; }
+        public double? Distance {  get; set; }
+        public string? City { get; set; }
     }
 }

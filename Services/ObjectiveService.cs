@@ -31,20 +31,6 @@ namespace TravelSBE.Services
 
             var objectiveModels = _mapper.Map<List<ObjectiveModel>>(list);
 
-            foreach (var objective in objectiveModels)
-            {
-                objective.Images = new List<string>();
-
-                var originalObjective = list.First(x => x.Id == objective.Id);
-
-                foreach (var image in originalObjective.Images)
-                {
-                    // Adăugăm fiecare imagine convertită în base64
-                    string base64Image = Convert.ToBase64String(image.ImageData);
-                    objective.Images.Add($"data:{image.ImageMimeType};base64,{base64Image}");
-                }
-            }
-
             result.Result = objectiveModels;
             return result;
         }
@@ -82,7 +68,7 @@ namespace TravelSBE.Services
                     objective.Images.Add($"data:{image.ImageMimeType};base64,{base64Image}");
                 }
 
-                var distance = CalculateDistance(latitude, longitude, objective.Latitude, objective.Longitude);
+                var distance = CalculateDistance(latitude, longitude, (double)objective.Latitude, (double)objective.Longitude);
                 objective.Distance = distance;
             }
 
@@ -92,6 +78,12 @@ namespace TravelSBE.Services
         public async Task<ServiceResult<ObjectiveModel>> CreateObjectiveAsync(ObjectiveModel objective)
         {
             ServiceResult<ObjectiveModel> result = new();
+            if(String.IsNullOrEmpty(objective.Name)&& String.IsNullOrEmpty(objective.City) && objective.Latitude == null && objective.Longitude == null)
+            {
+                result.ValidationMessage = "Nu ati completat toate campurile pentru a puta adauga un obiectiv";
+                result.IsSuccessful = false;
+                return result;
+            }
             objective.CreatedAt = DateTime.UtcNow;
             objective.UpdatedAt = DateTime.UtcNow;
             var mapped = _mapper.Map<Objective>(objective);
