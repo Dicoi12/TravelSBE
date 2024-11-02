@@ -133,7 +133,7 @@ namespace TravelSBE.Services
                     Math.Sin(lon / 2) * Math.Sin(lon / 2);
 
             var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-            return R * c; // Distance in km
+            return R * c; // Distance in km 
         }
 
     }
