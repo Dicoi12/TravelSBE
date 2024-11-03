@@ -1,2 +1,2 @@
-dotnet ef migrations add AddCityForObjectives
+dotnet ef migrations add AddFilePath
 dotnet ef database update

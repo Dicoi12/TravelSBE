@@ -1,11 +1,77 @@
 {
   "Version": 1,
-  "Hash": "FIebBWKyoLxFZg1ziUEH4fR9rn27Vyk2ORoh8urHC9E=",
+  "Hash": "9Wt1QmsHfSaG/TTJjzdUjA+KcTcmJq8WyS+6EfEviDs=",
   "Source": "TravelsBE",
   "BasePath": "_content/TravelsBE",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [],
-  "Assets": []
+  "DiscoveryPatterns": [
+    {
+      "Name": "TravelsBE\\wwwroot",
+      "Source": "TravelsBE",
+      "ContentRoot": "C:\\Users\\winko\\Source\\Repos\\TravelSBE\\wwwroot\\",
+      "BasePath": "_content/TravelsBE",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "C:\\Users\\winko\\Source\\Repos\\TravelSBE\\wwwroot\\uploads\\images\\0683fca7-3ecf-40c8-ad23-f3c07284161b.jpg",
+      "SourceId": "TravelsBE",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\winko\\Source\\Repos\\TravelSBE\\wwwroot\\",
+      "BasePath": "_content/TravelsBE",
+      "RelativePath": "uploads/images/0683fca7-3ecf-40c8-ad23-f3c07284161b.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\images\\0683fca7-3ecf-40c8-ad23-f3c07284161b.jpg"
+    },
+    {
+      "Identity": "C:\\Users\\winko\\Source\\Repos\\TravelSBE\\wwwroot\\uploads\\images\\2d45ea40-dd9a-44f7-9092-4ca23a22b3e2.jpg",
+      "SourceId": "TravelsBE",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\winko\\Source\\Repos\\TravelSBE\\wwwroot\\",
+      "BasePath": "_content/TravelsBE",
+      "RelativePath": "uploads/images/2d45ea40-dd9a-44f7-9092-4ca23a22b3e2.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\images\\2d45ea40-dd9a-44f7-9092-4ca23a22b3e2.jpg"
+    },
+    {
+      "Identity": "C:\\Users\\winko\\Source\\Repos\\TravelSBE\\wwwroot\\uploads\\images\\44abc5a0-9928-4756-86d3-806c430e1513.jpg",
+      "SourceId": "TravelsBE",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\winko\\Source\\Repos\\TravelSBE\\wwwroot\\",
+      "BasePath": "_content/TravelsBE",
+      "RelativePath": "uploads/images/44abc5a0-9928-4756-86d3-806c430e1513.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\images\\44abc5a0-9928-4756-86d3-806c430e1513.jpg"
+    }
+  ]
 }

@@ -6,14 +6,14 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v7.0": {
-      "TravelsBE/1.0.0": {
+      "TravelSBE/1.0.0": {
         "dependencies": {
           "AutoMapper": "13.0.1",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "7.0.4",
           "Swashbuckle.AspNetCore": "6.4.0"
         },
         "runtime": {
-          "TravelsBE.dll": {}
+          "TravelSBE.dll": {}
         }
       },
       "AutoMapper/13.0.1": {
@@ -179,7 +179,7 @@
     }
   },
   "libraries": {
-    "TravelsBE/1.0.0": {
+    "TravelSBE/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

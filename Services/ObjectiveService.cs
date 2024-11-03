@@ -29,7 +29,21 @@ namespace TravelSBE.Services
                 .Include(x => x.Images)
                 .ToListAsync();
 
+
             var objectiveModels = _mapper.Map<List<ObjectiveModel>>(list);
+
+            foreach (var objective in objectiveModels)
+            {
+                objective.Images = new List<string>();
+
+                var originalObjective = list.First(x => x.Id == objective.Id);
+
+                foreach (var image in originalObjective.Images)
+                {
+                    string base64Image = Convert.ToBase64String(image.ImageData);
+                    objective.Images.Add($"data:{image.ImageMimeType};base64,{base64Image}");
+                }
+            }
 
             result.Result = objectiveModels;
             return result;
@@ -78,7 +92,7 @@ namespace TravelSBE.Services
         public async Task<ServiceResult<ObjectiveModel>> CreateObjectiveAsync(ObjectiveModel objective)
         {
             ServiceResult<ObjectiveModel> result = new();
-            if(String.IsNullOrEmpty(objective.Name)&& String.IsNullOrEmpty(objective.City) && objective.Latitude == null && objective.Longitude == null)
+            if (String.IsNullOrEmpty(objective.Name) && String.IsNullOrEmpty(objective.City) && objective.Latitude == null && objective.Longitude == null)
             {
                 result.ValidationMessage = "Nu ati completat toate campurile pentru a puta adauga un obiectiv";
                 result.IsSuccessful = false;

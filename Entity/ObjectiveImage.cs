@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using TravelSBE.Entity.Helper;
 
@@ -11,6 +11,7 @@ namespace TravelSBE.Entity
         public int Id { get; set; }
 
         public byte[] ImageData { get; set; }
+        public string FilePath { get; set; } // Calea relativă a imaginii în sistemul local
         public string ImageMimeType { get; set; }
 
         [ForeignKey("IdObjective")]

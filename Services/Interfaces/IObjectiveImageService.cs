@@ -1,13 +1,12 @@
-﻿using TravelSBE.Models;
+﻿using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using TravelSBE.Entity;
 using TravelSBE.Utils;
 
-namespace TravelSBE.Services.Interfaces
+public interface IObjectiveImageService
 {
-    public interface IObjectiveImageService
-    {
-        Task<ServiceResult<ObjectiveImageModel>> GetImageByIdAsync(int id);
-        Task<ServiceResult<List<ObjectiveImageModel>>> GetImagesByObjectiveIdAsync(int objectiveId);
-        Task<ServiceResult<ObjectiveImageModel>> AddImageAsync(ObjectiveImageModel imageModel);
-        Task<ServiceResult<bool>> DeleteImageAsync(int id);
-    }
+    Task<List<ObjectiveImage>> GetImagesByObjectiveIdAsync(int objectiveId);
+    Task<ServiceResult<int>> UploadImageAsync(IFormFile imageFile, int objectiveId, int? eventId = null);
+    Task<ServiceResult<bool>> DeleteImageAsync(int imageId);
 }
