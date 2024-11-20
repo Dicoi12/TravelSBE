@@ -19,10 +19,9 @@ public class ObjectiveImageService : IObjectiveImageService
     {
         _context = context;
         if (!Directory.Exists(_uploadPath))
-            Directory.CreateDirectory(_uploadPath); // Crează directorul dacă nu există
+            Directory.CreateDirectory(_uploadPath); 
     }
 
-    // Metodă pentru obținerea tuturor imaginilor asociate unui obiectiv
     public async Task<List<ObjectiveImage>> GetImagesByObjectiveIdAsync(int objectiveId)
     {
         return await _context.ObjectiveImages
@@ -30,61 +29,84 @@ public class ObjectiveImageService : IObjectiveImageService
             .ToListAsync();
     }
 
-    // Metodă pentru încărcarea unei imagini asociate unui obiectiv
     public async Task<ServiceResult<int>> UploadImageAsync(IFormFile imageFile, int objectiveId, int? eventId = null)
     {
         var result = new ServiceResult<int>();
 
-        // Crează un nume unic pentru fișier și obține calea completă
-        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(imageFile.FileName)}";
-        var filePath = Path.Combine(_uploadPath, fileName);
-
-        // Salvează fișierul pe disc
-        using (var stream = new FileStream(filePath, FileMode.Create))
+        if (imageFile == null || imageFile.Length == 0)
         {
-            await imageFile.CopyToAsync(stream);
+            result.ValidationMessage = "Invalid image file.";
+            return result;
         }
 
-        // Salvează datele imaginii în baza de date
-        var objectiveImage = new ObjectiveImage
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+        var fileExtension = Path.GetExtension(imageFile.FileName).ToLower();
+        if (!allowedExtensions.Contains(fileExtension))
         {
-            IdObjective = objectiveId,
-            IdEvent = eventId,
-            FilePath = $"/uploads/images/{fileName}",
-            ImageMimeType = imageFile.ContentType,
-            ImageData = new byte[12]
-        };
+            result.ValidationMessage = "Unsupported file type.";
+            return result;
+        }
 
-        _context.ObjectiveImages.Add(objectiveImage);
-        await _context.SaveChangesAsync();
+        var fileName = $"{Guid.NewGuid()}{fileExtension}";
+        var filePath = Path.Combine(_uploadPath, fileName);
 
-        result.Result = objectiveImage.Id;
+        try
+        {
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await imageFile.CopyToAsync(stream);
+            }
+
+            var objectiveImage = new ObjectiveImage
+            {
+                IdObjective = objectiveId,
+                IdEvent = eventId,
+                FilePath = $"/uploads/images/{fileName}",
+                ImageMimeType = imageFile.ContentType
+            };
+
+            _context.ObjectiveImages.Add(objectiveImage);
+            await _context.SaveChangesAsync();
+
+            result.Result = objectiveImage.Id;
+        }
+        catch (Exception ex)
+        {
+            result.ValidationMessage = $"Error saving image: {ex.Message}";
+        }
+
         return result;
     }
 
-    // Metodă pentru ștergerea unei imagini
+
     public async Task<ServiceResult<bool>> DeleteImageAsync(int imageId)
     {
         var result = new ServiceResult<bool>();
 
-        // Găsește imaginea după ID
-        var image = await _context.ObjectiveImages.FindAsync(imageId);
-        if (image == null)
+        try
         {
-            result.ValidationMessage=("Image not found.");
-            return result;
+            var image = await _context.ObjectiveImages.FindAsync(imageId);
+            if (image == null)
+            {
+                result.ValidationMessage = "Image not found.";
+                return result;
+            }
+
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", image.FilePath.TrimStart('/'));
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+
+            _context.ObjectiveImages.Remove(image);
+            await _context.SaveChangesAsync();
+
+            result.Result = true;
+        }
+        catch (Exception ex)
+        {
+            result.ValidationMessage = $"Error deleting image: {ex.Message}";
         }
 
-        // Șterge fișierul de pe disc
-        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", image.FilePath.TrimStart('/'));
-        if (File.Exists(filePath))
-            File.Delete(filePath);
-
-        // Șterge înregistrarea din baza de date
-        _context.ObjectiveImages.Remove(image);
-        await _context.SaveChangesAsync();
-
-        result.Result = true;
         return result;
     }
+
 }

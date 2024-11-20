@@ -10,8 +10,7 @@ namespace TravelSBE.Entity
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        public byte[] ImageData { get; set; }
-        public string FilePath { get; set; } // Calea relativă a imaginii în sistemul local
+        public string FilePath { get; set; } 
         public string ImageMimeType { get; set; }
 
         [ForeignKey("IdObjective")]

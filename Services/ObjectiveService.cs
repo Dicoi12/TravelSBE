@@ -25,24 +25,20 @@ namespace TravelSBE.Services
         {
             var result = new ServiceResult<List<ObjectiveModel>>();
 
+            // Include imaginile în interogare
             var list = await _context.Objectives
                 .Include(x => x.Images)
                 .ToListAsync();
 
-
             var objectiveModels = _mapper.Map<List<ObjectiveModel>>(list);
 
-            foreach (var objective in objectiveModels)
+            // Mapare imaginile în URL-uri
+            foreach (var model in objectiveModels)
             {
-                objective.Images = new List<string>();
-
-                var originalObjective = list.First(x => x.Id == objective.Id);
-
-                foreach (var image in originalObjective.Images)
-                {
-                    string base64Image = Convert.ToBase64String(image.ImageData);
-                    objective.Images.Add($"data:{image.ImageMimeType};base64,{base64Image}");
-                }
+                var originalObjective = list.First(x => x.Id == model.Id);
+                model.Images = originalObjective.Images
+                    .Select(img => $"/wwwroot{img.FilePath}")
+                    .ToList();
             }
 
             result.Result = objectiveModels;
@@ -52,13 +48,34 @@ namespace TravelSBE.Services
 
 
 
+
         public async Task<ServiceResult<ObjectiveModel>> GetObjectiveByIdAsync(int id)
         {
-            ServiceResult<ObjectiveModel> result = new();
-            var item = await _context.Objectives.Where(x => x.Id == id).FirstOrDefaultAsync();
-            result.Result = _mapper.Map<ObjectiveModel>(item);
+            var result = new ServiceResult<ObjectiveModel>();
+
+            // Include imaginile
+            var item = await _context.Objectives
+                .Include(x => x.Images)
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (item == null)
+            {
+                result.ValidationMessage = "Objective not found.";
+                return result;
+            }
+
+            // Mapare la modelul final
+            var objectiveModel = _mapper.Map<ObjectiveModel>(item);
+
+            // Transformă FilePath în URL complet
+            objectiveModel.Images = item.Images
+                .Select(img => $"/wwwroot{img.FilePath}")
+                .ToList();
+
+            result.Result = objectiveModel;
             return result;
         }
+
 
         public async Task<ServiceResult<List<ObjectiveModel>>> GetLocalObjectives(double latitude, double longitude)
         {
@@ -75,12 +92,6 @@ namespace TravelSBE.Services
                 objective.Images = new List<string>();
 
                 var originalObjective = list.First(x => x.Id == objective.Id);
-
-                foreach (var image in originalObjective.Images)
-                {
-                    string base64Image = Convert.ToBase64String(image.ImageData);
-                    objective.Images.Add($"data:{image.ImageMimeType};base64,{base64Image}");
-                }
 
                 var distance = CalculateDistance(latitude, longitude, (double)objective.Latitude, (double)objective.Longitude);
                 objective.Distance = distance;
@@ -138,7 +149,7 @@ namespace TravelSBE.Services
         }
         private double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
         {
-            const double R = 6371; // Radius of the Earth in km
+            const double R = 6371; 
             var lat = (lat2 - lat1) * (Math.PI / 180);
             var lon = (lon2 - lon1) * (Math.PI / 180);
 
