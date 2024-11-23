@@ -115,7 +115,7 @@ namespace TravelSBE.Services
             return result;
         }
 
-        public async Task<ServiceResult<ObjectiveModel>> UpdateObjectiveAsync(ObjectiveModel objective)
+        public async Task<ServiceResult<ObjectiveModel>> UpdateObjectiveAsync(Objective objective)
         {
             ServiceResult<ObjectiveModel> result = new();
             if (!_context.Objectives.Any(e => e.Id == objective.Id))

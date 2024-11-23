@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TravelsBE.Dtos;
+using TravelSBE.Entity;
 using TravelSBE.Models;
 using TravelSBE.Services.Interfaces;
 using TravelSBE.Utils;
@@ -49,7 +50,7 @@ namespace TravelSBE.Controllers
         }
 
         [HttpPut("UpdateObjective")]
-        public async Task<IActionResult> PutObjective([FromQuery] ObjectiveModel objective)
+        public async Task<IActionResult> PutObjective([FromQuery] Objective objective)
         {
             var updatedObjective = await _objectiveService.UpdateObjectiveAsync(objective);
 

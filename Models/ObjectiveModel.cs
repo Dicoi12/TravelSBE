@@ -14,6 +14,6 @@ namespace TravelSBE.Models
         public double Longitude { get; set; }
         public string? City { get; set; }
         public List<string> Images { get; set; } = new List<string>();
-        public double? Distance { get; set; }
+        public double Distance { get; set; } = 0;
     }
 }
