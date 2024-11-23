@@ -89,6 +89,8 @@ namespace TravelSBE
 
             app.UseCors("AllowFrontend");
             //app.UseSpaStaticFiles();
+            app.UseStaticFiles();
+
 
             app.UseAuthorization();
             app.MapControllers();

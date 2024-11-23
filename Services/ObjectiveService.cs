@@ -15,29 +15,32 @@ namespace TravelSBE.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
-        public ObjectiveService(ApplicationDbContext context, IMapper mapper)
+        private readonly IConfiguration _configuration;
+        private readonly string _baseUrl;
+
+        public ObjectiveService(ApplicationDbContext context, IMapper mapper, IConfiguration configuration)
         {
             _context = context;
             _mapper = mapper;
+            _baseUrl = configuration["BaseUrl"];
         }
+
 
         public async Task<ServiceResult<List<ObjectiveModel>>> GetObjectivesAsync()
         {
             var result = new ServiceResult<List<ObjectiveModel>>();
 
-            // Include imaginile în interogare
             var list = await _context.Objectives
                 .Include(x => x.Images)
                 .ToListAsync();
 
             var objectiveModels = _mapper.Map<List<ObjectiveModel>>(list);
 
-            // Mapare imaginile în URL-uri
             foreach (var model in objectiveModels)
             {
                 var originalObjective = list.First(x => x.Id == model.Id);
                 model.Images = originalObjective.Images
-                    .Select(img => $"/wwwroot{img.FilePath}")
+                    .Select(img => $"{_baseUrl}{img.FilePath}")
                     .ToList();
             }
 
@@ -45,15 +48,10 @@ namespace TravelSBE.Services
             return result;
         }
 
-
-
-
-
         public async Task<ServiceResult<ObjectiveModel>> GetObjectiveByIdAsync(int id)
         {
             var result = new ServiceResult<ObjectiveModel>();
 
-            // Include imaginile
             var item = await _context.Objectives
                 .Include(x => x.Images)
                 .FirstOrDefaultAsync(x => x.Id == id);
@@ -64,10 +62,8 @@ namespace TravelSBE.Services
                 return result;
             }
 
-            // Mapare la modelul final
             var objectiveModel = _mapper.Map<ObjectiveModel>(item);
 
-            // Transformă FilePath în URL complet
             objectiveModel.Images = item.Images
                 .Select(img => $"/wwwroot{img.FilePath}")
                 .ToList();
@@ -89,9 +85,10 @@ namespace TravelSBE.Services
 
             foreach (var objective in objectiveModels)
             {
-                objective.Images = new List<string>();
-
                 var originalObjective = list.First(x => x.Id == objective.Id);
+                objective.Images = originalObjective.Images
+                    .Select(img => $"{_baseUrl}{img.FilePath}")
+                    .ToList();
 
                 var distance = CalculateDistance(latitude, longitude, (double)objective.Latitude, (double)objective.Longitude);
                 objective.Distance = distance;
