@@ -17,6 +17,26 @@ namespace TravelSBE.Services
             _context = context;
             _mapper = mapper;
         }
+        public async Task<ServiceResult<List<EventModel>>> GetAllEventsAsync()
+        {
+            ServiceResult<List<EventModel>> result = new();
+
+            try
+            {
+                var events = await _context.Events.ToListAsync();
+
+                var mapped = _mapper.Map<List<EventModel>>(events);
+
+                result.Result = mapped;
+            }
+            catch (Exception ex)
+            {
+                result.ValidationMessage = $"A apărut o eroare la obținerea evenimentelor: {ex.Message}";
+            }
+
+            return result;
+        }
+
         public async Task<ServiceResult<List<EventModel>>> GetEventByCityOrCoords(string? city, double? lat, double? lon)
         {
             ServiceResult<List<EventModel>> result = new();

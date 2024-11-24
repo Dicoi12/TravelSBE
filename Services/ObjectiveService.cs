@@ -36,7 +36,7 @@ namespace TravelSBE.Services
             var list = await query.ToListAsync();
             if (!string.IsNullOrWhiteSpace(search))
             {
-                list = list.Where(x => x.Name.Contains(search)).ToList();
+                list = list.Where(x => x.Name.ToLower().Contains(search.ToLower())).ToList();
             }
             var objectiveModels = _mapper.Map<List<ObjectiveModel>>(list);
 
