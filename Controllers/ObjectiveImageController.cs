@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using TravelSBE.Services;
+using TravelSBE.Utils;
 
 [Route("api/[controller]")]
 [ApiController]
@@ -25,18 +26,11 @@ public class ObjectiveImageController : ControllerBase
         }));
     }
 
-    // POST: api/ObjectiveImage/{objectiveId}/upload
-    [HttpPost("{objectiveId}/upload")]
-    public async Task<IActionResult> UploadImage(int objectiveId, [FromForm] IFormFile imageFile)
+    [HttpPost("upload")]
+    public async Task<ServiceResult<int>> UploadImage([FromForm] IFormFile imageFile, int? objectiveId)
     {
-        if (imageFile == null || imageFile.Length == 0)
-            return BadRequest("Invalid image file.");
-
         var result = await _imageService.UploadImageAsync(imageFile, objectiveId);
-        if (!result.IsSuccessful)
-            return BadRequest(result.ValidationMessage);
-
-        return Ok(new { ImageId = result.Result });
+        return result;
     }
 
     // DELETE: api/ObjectiveImage/delete/{imageId}

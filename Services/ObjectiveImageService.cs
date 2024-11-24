@@ -29,7 +29,7 @@ public class ObjectiveImageService : IObjectiveImageService
             .ToListAsync();
     }
 
-    public async Task<ServiceResult<int>> UploadImageAsync(IFormFile imageFile, int objectiveId, int? eventId = null)
+    public async Task<ServiceResult<int>> UploadImageAsync(IFormFile imageFile, int? objectiveId, int? eventId = null)
     {
         var result = new ServiceResult<int>();
 
@@ -74,7 +74,7 @@ public class ObjectiveImageService : IObjectiveImageService
         {
             result.ValidationMessage = $"Error saving image: {ex.Message}";
         }
-
+        result.IsSuccessful = true;
         return result;
     }
 

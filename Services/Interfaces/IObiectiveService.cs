@@ -8,7 +8,7 @@ namespace TravelSBE.Services.Interfaces
 {
     public interface IObjectiveService
     {
-        Task<ServiceResult<List<ObjectiveModel>>> GetObjectivesAsync();
+        Task<ServiceResult<List<ObjectiveModel>>> GetObjectivesAsync(string? search);
         Task<ServiceResult<List<ObjectiveModel>>> GetLocalObjectives(double latitude,double longitude);
         Task<ServiceResult<ObjectiveModel>> GetObjectiveByIdAsync(int id);
         Task<ServiceResult<ObjectiveModel>> CreateObjectiveAsync(ObjectiveModel objective);

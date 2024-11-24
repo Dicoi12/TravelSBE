@@ -26,14 +26,18 @@ namespace TravelSBE.Services
         }
 
 
-        public async Task<ServiceResult<List<ObjectiveModel>>> GetObjectivesAsync()
+        public async Task<ServiceResult<List<ObjectiveModel>>> GetObjectivesAsync(string? search)
         {
             var result = new ServiceResult<List<ObjectiveModel>>();
 
-            var list = await _context.Objectives
-                .Include(x => x.Images)
-                .ToListAsync();
+            var query = _context.Objectives.Include(x => x.Images);
 
+
+            var list = await query.ToListAsync();
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                list = list.Where(x => x.Name.Contains(search)).ToList();
+            }
             var objectiveModels = _mapper.Map<List<ObjectiveModel>>(list);
 
             foreach (var model in objectiveModels)
