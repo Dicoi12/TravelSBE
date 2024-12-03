@@ -19,7 +19,7 @@ public class ObjectiveImageService : IObjectiveImageService
     {
         _context = context;
         if (!Directory.Exists(_uploadPath))
-            Directory.CreateDirectory(_uploadPath); 
+            Directory.CreateDirectory(_uploadPath);
     }
 
     public async Task<List<ObjectiveImage>> GetImagesByObjectiveIdAsync(int objectiveId)
@@ -29,7 +29,7 @@ public class ObjectiveImageService : IObjectiveImageService
             .ToListAsync();
     }
 
-    public async Task<ServiceResult<int>> UploadImageAsync(IFormFile imageFile, int? objectiveId, int? eventId = null)
+    public async Task<ServiceResult<int>> UploadImageAsync(IFormFile imageFile, int? objectiveId, int? eventId=null, int? idItinerary=null)
     {
         var result = new ServiceResult<int>();
 
@@ -62,7 +62,8 @@ public class ObjectiveImageService : IObjectiveImageService
                 IdObjective = objectiveId,
                 IdEvent = eventId,
                 FilePath = $"/uploads/images/{fileName}",
-                ImageMimeType = imageFile.ContentType
+                ImageMimeType = imageFile.ContentType,
+                IdItinerary = idItinerary,
             };
 
             _context.ObjectiveImages.Add(objectiveImage);

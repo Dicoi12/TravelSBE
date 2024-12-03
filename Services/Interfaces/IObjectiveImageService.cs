@@ -7,6 +7,6 @@ using TravelSBE.Utils;
 public interface IObjectiveImageService
 {
     Task<List<ObjectiveImage>> GetImagesByObjectiveIdAsync(int objectiveId);
-    Task<ServiceResult<int>> UploadImageAsync(IFormFile imageFile, int? objectiveId, int? eventId = null);
+    Task<ServiceResult<int>> UploadImageAsync(IFormFile imageFile, int? objectiveId, int? eventId = null, int? idItinerary = null);
     Task<ServiceResult<bool>> DeleteImageAsync(int imageId);
 }

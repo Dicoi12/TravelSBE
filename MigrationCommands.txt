@@ -1,2 +1,3 @@
-dotnet ef migrations add RemoveImageData
+dotnet ef migrations add ItineraryUpdatev3
 dotnet ef database update
+dotnet ef migrations remove

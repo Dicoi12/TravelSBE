@@ -1,5 +1,6 @@
 ﻿ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 using TravelSBE.Entity.Helper;
 
 namespace TravelSBE.Entity
@@ -19,5 +20,9 @@ namespace TravelSBE.Entity
         [ForeignKey("IdEvent")]
         public int? IdEvent { get; set; }
         public Event? Event { get; set; }
+
+        [ForeignKey("Itinerary")]
+        public int? IdItinerary { get; set; }
+        public Itinerary? Itinerary { get; set; }
     }
 }

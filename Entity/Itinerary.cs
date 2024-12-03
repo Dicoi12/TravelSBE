@@ -11,7 +11,8 @@ namespace TravelSBE.Entity
         public int Id { get; set; }
         public string Name { get; set; }
         [ForeignKey("User")]
-        public int IdUser { get; set; }
-        public User User { get; set; }
+        public int? IdUser { get; set; }
+        public User? User { get; set; }
+        public List<ObjectiveImage> Images { get; set; } = new List<ObjectiveImage>();
     }
 }
