@@ -98,7 +98,7 @@ namespace TravelSBE.Services
                 objective.Distance = distance;
             }
 
-            result.Result = objectiveModels.OrderBy(o => o.Distance).ToList();
+            result.Result = objectiveModels.OrderBy(o => o.Id).ToList();
             return result;
         }
         public async Task<ServiceResult<ObjectiveModel>> CreateObjectiveAsync(ObjectiveModel objective)
