@@ -8,7 +8,8 @@ namespace TravelSBE.Models
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public int IdUser { get; set; }
-        public User User { get; set; }
+        public int? IdUser { get; set; }
+        public User? User { get; set; }
+        public List<ObjectiveImage> Images { get; set; } = new List<ObjectiveImage>();
     }
 }

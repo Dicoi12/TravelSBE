@@ -10,6 +10,12 @@ namespace TravelSBE.Entity
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
 
         public int Id { get; set; }
+        [Required]
+        public string Name { get; set; }
+        public string? Descriere {  get; set; }
+        [ForeignKey("Itinerary")]
+        public int ItineraryId { get; set; }
+        public Itinerary Itinerary { get; set; }
         [ForeignKey("Objective")]
         public int? IdObjective { get; set; }
         public Objective? Objective { get; set; }
