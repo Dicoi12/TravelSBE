@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TravelSBE.Data;
@@ -11,9 +12,11 @@ using TravelSBE.Data;
 namespace TravelSBE.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241204093529_FKChangesv1")]
+    partial class FKChangesv1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -155,13 +158,7 @@ namespace TravelSBE.Migrations
                     b.Property<string>("Descriere")
                         .HasColumnType("text");
 
-                    b.Property<int?>("EventId")
-                        .HasColumnType("integer");
-
                     b.Property<int?>("IdEvent")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("IdItinerary")
                         .HasColumnType("integer");
 
                     b.Property<int?>("IdObjective")
@@ -174,9 +171,6 @@ namespace TravelSBE.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("ObjectiveId")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -185,11 +179,11 @@ namespace TravelSBE.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EventId");
+                    b.HasIndex("IdEvent");
+
+                    b.HasIndex("IdObjective");
 
                     b.HasIndex("ItineraryId");
-
-                    b.HasIndex("ObjectiveId");
 
                     b.ToTable("ItineraryDetails");
                 });
@@ -240,6 +234,9 @@ namespace TravelSBE.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("EventId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("FilePath")
                         .IsRequired()
                         .HasColumnType("text");
@@ -248,9 +245,11 @@ namespace TravelSBE.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int?>("IdItinerary")
+                        .IsRequired()
                         .HasColumnType("integer");
 
                     b.Property<int?>("IdObjective")
+                        .IsRequired()
                         .HasColumnType("integer");
 
                     b.Property<string>("ImageMimeType")
@@ -262,7 +261,7 @@ namespace TravelSBE.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IdEvent");
+                    b.HasIndex("EventId");
 
                     b.HasIndex("IdItinerary");
 
@@ -440,17 +439,17 @@ namespace TravelSBE.Migrations
                 {
                     b.HasOne("TravelSBE.Entity.Event", "Event")
                         .WithMany()
-                        .HasForeignKey("EventId");
+                        .HasForeignKey("IdEvent");
+
+                    b.HasOne("TravelSBE.Entity.Objective", "Objective")
+                        .WithMany()
+                        .HasForeignKey("IdObjective");
 
                     b.HasOne("TravelSBE.Entity.Itinerary", "Itinerary")
                         .WithMany()
                         .HasForeignKey("ItineraryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("TravelSBE.Entity.Objective", "Objective")
-                        .WithMany()
-                        .HasForeignKey("ObjectiveId");
 
                     b.Navigation("Event");
 
@@ -462,16 +461,20 @@ namespace TravelSBE.Migrations
             modelBuilder.Entity("TravelSBE.Entity.ObjectiveImage", b =>
                 {
                     b.HasOne("TravelSBE.Entity.Event", "Event")
-                        .WithMany("Images")
-                        .HasForeignKey("IdEvent");
+                        .WithMany()
+                        .HasForeignKey("EventId");
 
                     b.HasOne("TravelSBE.Entity.Itinerary", "Itinerary")
                         .WithMany("Images")
-                        .HasForeignKey("IdItinerary");
+                        .HasForeignKey("IdItinerary")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("TravelSBE.Entity.Objective", "Objective")
                         .WithMany("Images")
-                        .HasForeignKey("IdObjective");
+                        .HasForeignKey("IdObjective")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Event");
 
@@ -518,11 +521,6 @@ namespace TravelSBE.Migrations
                     b.Navigation("Objective");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("TravelSBE.Entity.Event", b =>
-                {
-                    b.Navigation("Images");
                 });
 
             modelBuilder.Entity("TravelSBE.Entity.Itinerary", b =>

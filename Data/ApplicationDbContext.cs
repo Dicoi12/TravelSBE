@@ -40,14 +40,17 @@ namespace TravelSBE.Data
             builder.Entity<Objective>()
                    .HasMany(e => e.Images)
                    .WithOne(e => e.Objective)
-                   .HasForeignKey(e => e.IdObjective)
-                   .IsRequired();
+                   .HasForeignKey(e => e.IdObjective);
+
+            builder.Entity<Event>()
+                   .HasMany(e => e.Images)
+                   .WithOne(e => e.Event)
+                   .HasForeignKey(e => e.IdEvent);
 
             builder.Entity<Itinerary>()
                 .HasMany(e => e.Images)
                    .WithOne(e => e.Itinerary)
-                   .HasForeignKey(e => e.IdItinerary)
-                   .IsRequired();
+                   .HasForeignKey(e => e.IdItinerary);
         }
 
 

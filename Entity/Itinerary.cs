@@ -10,7 +10,7 @@ namespace TravelSBE.Entity
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public string Name { get; set; }
-        [ForeignKey("User")]
+        [ForeignKey("IdUser")]
         public int? IdUser { get; set; }
         public User? User { get; set; }
         public List<ObjectiveImage> Images { get; set; } = new List<ObjectiveImage>();

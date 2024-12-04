@@ -59,7 +59,7 @@ public class ObjectiveImageService : IObjectiveImageService
 
             var objectiveImage = new ObjectiveImage
             {
-                IdObjective = objectiveId,
+                IdObjective = objectiveId??null,
                 IdEvent = eventId,
                 FilePath = $"/uploads/images/{fileName}",
                 ImageMimeType = imageFile.ContentType,

@@ -5,6 +5,7 @@ using TravelSBE.Entity;
 using TravelSBE.Models;
 using TravelSBE.Services.Interfaces;
 using TravelSBE.Utils;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace TravelSBE.Services
 {
@@ -12,28 +13,38 @@ namespace TravelSBE.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
-        public EventService(ApplicationDbContext context, IMapper mapper)
+        private readonly IConfiguration _configuration;
+        private readonly string _baseUrl;
+        public EventService(ApplicationDbContext context, IMapper mapper, IConfiguration configuration)
         {
             _context = context;
             _mapper = mapper;
+            _configuration = configuration;
+            _baseUrl = configuration["BaseUrl"];
         }
         public async Task<ServiceResult<List<EventModel>>> GetAllEventsAsync()
         {
-            ServiceResult<List<EventModel>> result = new();
+            var result = new ServiceResult<List<EventModel>>();
 
-            try
+            var query = _context.Events.Include(x => x.Images);
+
+
+            var list = await query.ToListAsync();
+            //if (!string.IsNullOrWhiteSpace(search))
+            //{
+            //    list = list.Where(x => x.Name.ToLower().Contains(search.ToLower())).ToList();
+            //}
+            var objectiveModels = _mapper.Map<List<EventModel>>(list);
+
+            foreach (var model in objectiveModels)
             {
-                var events = await _context.Events.ToListAsync();
-
-                var mapped = _mapper.Map<List<EventModel>>(events);
-
-                result.Result = mapped;
-            }
-            catch (Exception ex)
-            {
-                result.ValidationMessage = $"A apărut o eroare la obținerea evenimentelor: {ex.Message}";
+                var originalObjective = list.First(x => x.Id == model.Id);
+                model.Images = originalObjective.Images
+                    .Select(img => $"{_baseUrl}{img.FilePath}")
+                    .ToList();
             }
 
+            result.Result = objectiveModels;
             return result;
         }
 
@@ -68,7 +79,7 @@ namespace TravelSBE.Services
         public async Task<ServiceResult<EventModel>> GetEventByIdAsync(int id)
         {
             ServiceResult<EventModel> result = new();
-            var entity = await _context.Events.FindAsync(id);
+            var entity = await _context.Events.Include(x=>x.Images).Where(x=>x.Id==id).FirstOrDefaultAsync();
 
             if (entity == null)
             {

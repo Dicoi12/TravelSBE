@@ -19,10 +19,10 @@ namespace TravelSBE.Controllers
         }
 
         [HttpGet("GetAllEventsAsync")]
-        public async Task<IActionResult> GetAllEventsAsync()
+        public async Task<ServiceResult<List<EventModel>>> GetAllEventsAsync()
         {
             var result = await _eventService.GetAllEventsAsync();
-            return Ok(result);
+            return result;
         }
         [HttpGet("{id}")]
         public async Task<ServiceResult<EventModel>> GetEventById(int id)

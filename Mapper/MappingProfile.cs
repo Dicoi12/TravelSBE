@@ -10,7 +10,8 @@ namespace TravelSBE.Mapper
         {
             CreateMap<Objective, ObjectiveModel>();
             CreateMap<ObjectiveModel, Objective>();
-            CreateMap<Event, EventModel>().ReverseMap();
+            CreateMap<Event, EventModel>();
+            CreateMap<EventModel, Event>();
             CreateMap<ObjectiveImage, ObjectiveImageModel>().ReverseMap();
             CreateMap<User, UserModel>().ReverseMap();
             CreateMap<Itinerary, ItineraryModel>().ReverseMap();

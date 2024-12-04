@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using TravelSBE.Data;
 using TravelSBE.Services;
-using TravelSBE.Mapper;
 using Microsoft.OpenApi.Models;
 using TravelSBE.Services.Interfaces;
 using Microsoft.AspNetCore.Http.Features;
+using TravelSBE.Mapper;
 
 namespace TravelSBE
 {

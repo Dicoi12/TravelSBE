@@ -17,5 +17,6 @@ namespace TravelSBE.Models
         public DateTime EndDate { get; set; }
         public int? IdObjective { get; set; }
         public Objective? Objective { get; set; }
+        public List<string> Images { get; set; } = new();
     }
 }

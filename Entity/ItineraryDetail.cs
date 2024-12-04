@@ -13,13 +13,13 @@ namespace TravelSBE.Entity
         [Required]
         public string Name { get; set; }
         public string? Descriere {  get; set; }
-        [ForeignKey("Itinerary")]
-        public int ItineraryId { get; set; }
+        [ForeignKey("IdItinerary")]
+        public int IdItinerary { get; set; }
         public Itinerary Itinerary { get; set; }
-        [ForeignKey("Objective")]
+        [ForeignKey("IdObjective")]
         public int? IdObjective { get; set; }
         public Objective? Objective { get; set; }
-        [ForeignKey("Event")]
+        [ForeignKey("IdEvent")]
         public int? IdEvent { get; set; }
         public Event? Event { get; set; }
         public int VisitOrder { get; set; }
