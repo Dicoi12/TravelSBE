@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TravelSBE.Data;
@@ -11,9 +12,11 @@ using TravelSBE.Data;
 namespace TravelSBE.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241209143737_ObjectiveType")]
+    partial class ObjectiveType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -55,7 +58,7 @@ namespace TravelSBE.Migrations
 
                     b.HasIndex("IdUser");
 
-                    b.ToTable("Answers", (string)null);
+                    b.ToTable("Answers");
                 });
 
             modelBuilder.Entity("TravelSBE.Entity.Event", b =>
@@ -107,7 +110,7 @@ namespace TravelSBE.Migrations
 
                     b.HasIndex("IdObjective");
 
-                    b.ToTable("Events", (string)null);
+                    b.ToTable("Events");
                 });
 
             modelBuilder.Entity("TravelSBE.Entity.Itinerary", b =>
@@ -138,7 +141,7 @@ namespace TravelSBE.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Itineraries", (string)null);
+                    b.ToTable("Itineraries");
                 });
 
             modelBuilder.Entity("TravelSBE.Entity.ItineraryDetail", b =>
@@ -191,7 +194,7 @@ namespace TravelSBE.Migrations
 
                     b.HasIndex("ObjectiveId");
 
-                    b.ToTable("ItineraryDetails", (string)null);
+                    b.ToTable("ItineraryDetails");
                 });
 
             modelBuilder.Entity("TravelSBE.Entity.Objective", b =>
@@ -231,7 +234,7 @@ namespace TravelSBE.Migrations
 
                     b.HasIndex("Type");
 
-                    b.ToTable("Objectives", (string)null);
+                    b.ToTable("Objectives");
                 });
 
             modelBuilder.Entity("TravelSBE.Entity.ObjectiveImage", b =>
@@ -273,7 +276,7 @@ namespace TravelSBE.Migrations
 
                     b.HasIndex("IdObjective");
 
-                    b.ToTable("ObjectiveImages", (string)null);
+                    b.ToTable("ObjectiveImages");
                 });
 
             modelBuilder.Entity("TravelSBE.Entity.Question", b =>
@@ -314,13 +317,16 @@ namespace TravelSBE.Migrations
 
                     b.HasIndex("IdUser");
 
-                    b.ToTable("Questions", (string)null);
+                    b.ToTable("Questions");
                 });
 
             modelBuilder.Entity("TravelSBE.Entity.Review", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Comment")
                         .HasColumnType("text");
@@ -345,9 +351,11 @@ namespace TravelSBE.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("IdObjective");
+
                     b.HasIndex("IdUser");
 
-                    b.ToTable("Reviews", (string)null);
+                    b.ToTable("Reviews");
                 });
 
             modelBuilder.Entity("TravelSBE.Entity.User", b =>
@@ -396,7 +404,7 @@ namespace TravelSBE.Migrations
                     b.HasIndex("UserName")
                         .IsUnique();
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("TravelsBE.Entity.ObjectiveType", b =>
@@ -425,7 +433,7 @@ namespace TravelSBE.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ObjectiveTypes", (string)null);
+                    b.ToTable("ObjectiveTypes");
                 });
 
             modelBuilder.Entity("TravelSBE.Entity.Answer", b =>
@@ -544,10 +552,8 @@ namespace TravelSBE.Migrations
             modelBuilder.Entity("TravelSBE.Entity.Review", b =>
                 {
                     b.HasOne("TravelSBE.Entity.Objective", "Objective")
-                        .WithMany("Reviews")
-                        .HasForeignKey("Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithMany()
+                        .HasForeignKey("IdObjective");
 
                     b.HasOne("TravelSBE.Entity.User", "User")
                         .WithMany()
@@ -573,8 +579,6 @@ namespace TravelSBE.Migrations
             modelBuilder.Entity("TravelSBE.Entity.Objective", b =>
                 {
                     b.Navigation("Images");
-
-                    b.Navigation("Reviews");
                 });
 #pragma warning restore 612, 618
         }

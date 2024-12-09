@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection.Emit;
 using System.Reflection.Metadata;
 using System.Security.AccessControl;
+using TravelsBE.Entity;
 using TravelSBE.Entity;
 
 namespace TravelSBE.Data
@@ -23,6 +24,7 @@ namespace TravelSBE.Data
         public DbSet<Question> Questions { get; set; }
         public DbSet<Answer> Answers { get; set; }
         public DbSet<ObjectiveImage> ObjectiveImages { get; set; }
+        public DbSet<ObjectiveType> ObjectiveTypes { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<User>()
@@ -41,6 +43,11 @@ namespace TravelSBE.Data
                    .HasMany(e => e.Images)
                    .WithOne(e => e.Objective)
                    .HasForeignKey(e => e.IdObjective);
+            
+            builder.Entity<Objective>()
+                   .HasMany(e => e.Reviews)
+                   .WithOne(e => e.Objective)
+                   .HasForeignKey(e => e.Id);
 
             builder.Entity<Event>()
                    .HasMany(e => e.Images)

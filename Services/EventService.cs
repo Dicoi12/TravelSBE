@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using TravelSBE.Data;
 using TravelSBE.Entity;
 using TravelSBE.Models;
@@ -79,7 +80,7 @@ namespace TravelSBE.Services
         public async Task<ServiceResult<EventModel>> GetEventByIdAsync(int id)
         {
             ServiceResult<EventModel> result = new();
-            var entity = await _context.Events.Include(x=>x.Images).Where(x=>x.Id==id).FirstOrDefaultAsync();
+            var entity = await _context.Events.Include(x => x.Images).Where(x => x.Id == id).FirstOrDefaultAsync();
 
             if (entity == null)
             {
@@ -88,6 +89,9 @@ namespace TravelSBE.Services
             }
 
             var mapped = _mapper.Map<EventModel>(entity);
+            mapped.Images = entity.Images
+                   .Select(img => $"{_baseUrl}{img.FilePath}")
+                   .ToList();
             result.Result = mapped;
             return result;
         }
