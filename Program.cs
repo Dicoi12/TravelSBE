@@ -5,6 +5,7 @@ using Microsoft.OpenApi.Models;
 using TravelSBE.Services.Interfaces;
 using Microsoft.AspNetCore.Http.Features;
 using TravelSBE.Mapper;
+using TravelSBE.Controllers;
 
 namespace TravelSBE
 {
@@ -54,6 +55,7 @@ namespace TravelSBE
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IEventService, EventService>();
             builder.Services.AddScoped<IObjectiveImageService, ObjectiveImageService>();
+            builder.Services.AddScoped<IReviewService, ReviewService>();
 
             builder.Services.AddSwaggerGen(c =>
             {

@@ -15,5 +15,6 @@ namespace TravelSBE.Models
         public string? City { get; set; }
         public List<string> Images { get; set; } = new List<string>();
         public double Distance { get; set; } = 0;
+        public List<ReviewModel> Reviews { get; set; } = new List<ReviewModel>();
     }
 }

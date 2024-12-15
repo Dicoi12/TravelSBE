@@ -19,6 +19,7 @@ namespace TravelSBE.Entity
         [ForeignKey(nameof(ObjectiveType))]
         public int? Type { get; set; }
         public ObjectiveType? ObjectiveType { get; set; }
+        public string? Website { get; set; }
 
         public List<ObjectiveImage> Images { get; set; } = new List<ObjectiveImage>();
         public List<Review> Reviews { get; set; } = new List<Review>();
