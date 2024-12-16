@@ -20,5 +20,6 @@ public class Event : BaseAuditEntity
     [ForeignKey("Objective")]
     public int? IdObjective { get; set; }
     public Objective? Objective { get; set; }
+    //public string? WebSite { get; set; }
     public List<ObjectiveImage> Images { get; set; } = new List<ObjectiveImage>();
 }

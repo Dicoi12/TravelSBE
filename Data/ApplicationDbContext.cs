@@ -25,7 +25,8 @@ namespace TravelSBE.Data
         public DbSet<Answer> Answers { get; set; }
         public DbSet<ObjectiveImage> ObjectiveImages { get; set; }
         public DbSet<ObjectiveType> ObjectiveTypes { get; set; }
-        //public DbSet<ObjectiveSchedule> ObjectiveSchedules { get; set; }
+        public DbSet<ObjectiveSchedule> ObjectiveSchedules { get; set; }
+        public DbSet<Experience> Experiences { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<User>()
@@ -60,9 +61,9 @@ namespace TravelSBE.Data
                    .WithOne(e => e.Itinerary)
                    .HasForeignKey(e => e.IdItinerary);
 
-            //builder.Entity<ObjectiveSchedule>()
-            //    .Property(s => s.DayOfWeek)
-            //    .HasConversion<string>();
+            builder.Entity<ObjectiveSchedule>()
+                .Property(s => s.DayOfWeek)
+                .HasConversion<string>();
         }
 
 

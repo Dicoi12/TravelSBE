@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using TravelsBE.Entity;
+using TravelsBE.Models;
 using TravelSBE.Entity;
 using TravelSBE.Models;
 
@@ -16,6 +18,7 @@ namespace TravelSBE.Mapper
             CreateMap<User, UserModel>().ReverseMap();
             CreateMap<Itinerary, ItineraryModel>().ReverseMap();
             CreateMap<Review, ReviewModel>().ReverseMap();
+            CreateMap<Experience, ExperienceModel>().ReverseMap();
         }
     }
 }

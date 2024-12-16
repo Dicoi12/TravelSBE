@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TravelSBE.Data;
@@ -11,9 +12,11 @@ using TravelSBE.Data;
 namespace TravelSBE.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241216143448_ObjectiveSchedule")]
+    partial class ObjectiveSchedule
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -248,9 +251,6 @@ namespace TravelSBE.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int?>("ExperienceId")
-                        .HasColumnType("integer");
-
                     b.Property<string>("FilePath")
                         .IsRequired()
                         .HasColumnType("text");
@@ -272,8 +272,6 @@ namespace TravelSBE.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ExperienceId");
 
                     b.HasIndex("IdEvent");
 
@@ -407,63 +405,6 @@ namespace TravelSBE.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("TravelsBE.Entity.Experience", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Country")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsPublic")
-                        .HasColumnType("boolean");
-
-                    b.Property<double>("Latitude")
-                        .HasColumnType("double precision");
-
-                    b.Property<string>("LocationName")
-                        .HasColumnType("text");
-
-                    b.Property<double>("Longitude")
-                        .HasColumnType("double precision");
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<int?>("Rating")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Experiences");
-                });
-
             modelBuilder.Entity("TravelsBE.Entity.ObjectiveSchedule", b =>
                 {
                     b.Property<int>("Id")
@@ -595,10 +536,6 @@ namespace TravelSBE.Migrations
 
             modelBuilder.Entity("TravelSBE.Entity.ObjectiveImage", b =>
                 {
-                    b.HasOne("TravelsBE.Entity.Experience", null)
-                        .WithMany("Images")
-                        .HasForeignKey("ExperienceId");
-
                     b.HasOne("TravelSBE.Entity.Event", "Event")
                         .WithMany("Images")
                         .HasForeignKey("IdEvent");
@@ -686,11 +623,6 @@ namespace TravelSBE.Migrations
                     b.Navigation("Images");
 
                     b.Navigation("Reviews");
-                });
-
-            modelBuilder.Entity("TravelsBE.Entity.Experience", b =>
-                {
-                    b.Navigation("Images");
                 });
 #pragma warning restore 612, 618
         }
