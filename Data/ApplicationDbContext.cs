@@ -26,7 +26,7 @@ namespace TravelSBE.Data
         public DbSet<ObjectiveImage> ObjectiveImages { get; set; }
         public DbSet<ObjectiveType> ObjectiveTypes { get; set; }
         public DbSet<ObjectiveSchedule> ObjectiveSchedules { get; set; }
-        public DbSet<Experience> Experiences { get; set; }
+        public DbSet<Experience> Experiences { get; set; }  
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<User>()

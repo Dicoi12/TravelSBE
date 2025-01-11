@@ -6,6 +6,8 @@ using TravelSBE.Services.Interfaces;
 using Microsoft.AspNetCore.Http.Features;
 using TravelSBE.Mapper;
 using TravelSBE.Controllers;
+using TravelsBE.Services;
+using TravelsBE.Services.Interfaces;
 
 namespace TravelSBE
 {
@@ -56,6 +58,7 @@ namespace TravelSBE
             builder.Services.AddScoped<IEventService, EventService>();
             builder.Services.AddScoped<IObjectiveImageService, ObjectiveImageService>();
             builder.Services.AddScoped<IReviewService, ReviewService>();
+            builder.Services.AddScoped<IExperienceService, ExperienceService>();
 
             builder.Services.AddSwaggerGen(c =>
             {
@@ -73,7 +76,7 @@ namespace TravelSBE
             using (var scope = app.Services.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                dbContext.Database.Migrate(); // Ensure migrations are applied
+                dbContext.Database.Migrate(); 
             }
 
             if (app.Environment.IsDevelopment())

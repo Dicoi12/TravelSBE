@@ -5,7 +5,6 @@ using TravelSBE.Entity.Helper;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace TravelsBE.Models;
-
 public class ExperienceModel : BaseAuditEntity
 {
     public int Id { get; set; }
@@ -21,7 +20,7 @@ public class ExperienceModel : BaseAuditEntity
 
     public int? Rating { get; set; }
 
-    public List<ObjectiveImage> Images { get; set; }
+    public List<string> Images { get; set; }
     public bool IsPublic { get; set; } = true;
 
 }

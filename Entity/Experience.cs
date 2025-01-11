@@ -15,20 +15,20 @@ namespace TravelsBE.Entity
         public string? Name { get; set; }
         [Required]
         [StringLength(100)]
-        public string Title { get; set; }
+        public string Title { get; set; } = null!;
 
         [Required]
-        public string Description { get; set; }
+        public string Description { get; set; } = null!;
         [Required]
         public double Latitude { get; set; }
 
         [Required]
         public double Longitude { get; set; }
         [StringLength(100)]
-        public string City { get; set; }
+        public string? City { get; set; }
 
         [StringLength(100)]
-        public string Country { get; set; }
+        public string? Country { get; set; }
 
         public string? LocationName { get; set; }
 

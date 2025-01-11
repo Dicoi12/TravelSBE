@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Y2iDulvOWu0=",
+  "dgSpecHash": "j6qyY9mbHxQ=",
   "success": true,
-  "projectFilePath": "C:\\Users\\winko\\Source\\Repos\\TravelSBE\\TravelsBE.csproj",
+  "projectFilePath": "C:\\Users\\winko\\source\\repos\\Dicoi12\\TravelSBE\\TravelsBE.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\winko\\.nuget\\packages\\automapper\\13.0.1\\automapper.13.0.1.nupkg.sha512",
     "C:\\Users\\winko\\.nuget\\packages\\microsoft.entityframeworkcore\\7.0.5\\microsoft.entityframeworkcore.7.0.5.nupkg.sha512",
