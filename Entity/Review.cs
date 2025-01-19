@@ -7,10 +7,11 @@ namespace TravelSBE.Entity
     public class Review : BaseAuditEntity
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         [ForeignKey("User")]
         public int IdUser { get; set; }
-        public User User { get; set; }
+        public User? User { get; set; }
         [ForeignKey("Objective")]
         public int? IdObjective { get; set; }
         public Objective? Objective { get; set; }

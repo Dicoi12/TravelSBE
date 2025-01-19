@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TravelSBE.Data;
 using TravelSBE.Entity;
@@ -59,6 +60,30 @@ namespace TravelSBE.Services
             else
             {
                 return new UserModel();
+            }
+        }
+
+        public async Task<bool> ChangePassword(int userId, string currentPassword, string newPassword)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+            if (user == null)
+            {
+                return false;
+            }
+            bool isPasswordValid = PasswordHelper.VerifyPassword(currentPassword, user.Hash, user.Salt);
+            if (isPasswordValid)
+            {
+                string salt = PasswordHelper.CreateSalt();
+                string hash = PasswordHelper.HashPassword(newPassword, salt);
+                user.Salt = salt;
+                user.Hash = hash;
+                _context.Update(user);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
 

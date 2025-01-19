@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TravelSBE.Data;
@@ -11,9 +12,11 @@ using TravelSBE.Data;
 namespace TravelSBE.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250116152356_testMigration")]
+    partial class testMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -55,7 +58,7 @@ namespace TravelSBE.Migrations
 
                     b.HasIndex("IdUser");
 
-                    b.ToTable("Answers", (string)null);
+                    b.ToTable("Answers");
                 });
 
             modelBuilder.Entity("TravelSBE.Entity.Event", b =>
@@ -107,7 +110,7 @@ namespace TravelSBE.Migrations
 
                     b.HasIndex("IdObjective");
 
-                    b.ToTable("Events", (string)null);
+                    b.ToTable("Events");
                 });
 
             modelBuilder.Entity("TravelSBE.Entity.Itinerary", b =>
@@ -138,7 +141,7 @@ namespace TravelSBE.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Itineraries", (string)null);
+                    b.ToTable("Itineraries");
                 });
 
             modelBuilder.Entity("TravelSBE.Entity.ItineraryDetail", b =>
@@ -191,7 +194,7 @@ namespace TravelSBE.Migrations
 
                     b.HasIndex("ObjectiveId");
 
-                    b.ToTable("ItineraryDetails", (string)null);
+                    b.ToTable("ItineraryDetails");
                 });
 
             modelBuilder.Entity("TravelSBE.Entity.Objective", b =>
@@ -234,7 +237,7 @@ namespace TravelSBE.Migrations
 
                     b.HasIndex("Type");
 
-                    b.ToTable("Objectives", (string)null);
+                    b.ToTable("Objectives");
                 });
 
             modelBuilder.Entity("TravelSBE.Entity.ObjectiveImage", b =>
@@ -281,7 +284,7 @@ namespace TravelSBE.Migrations
 
                     b.HasIndex("IdObjective");
 
-                    b.ToTable("ObjectiveImages", (string)null);
+                    b.ToTable("ObjectiveImages");
                 });
 
             modelBuilder.Entity("TravelSBE.Entity.Question", b =>
@@ -322,7 +325,7 @@ namespace TravelSBE.Migrations
 
                     b.HasIndex("IdUser");
 
-                    b.ToTable("Questions", (string)null);
+                    b.ToTable("Questions");
                 });
 
             modelBuilder.Entity("TravelSBE.Entity.Review", b =>
@@ -355,7 +358,7 @@ namespace TravelSBE.Migrations
 
                     b.HasIndex("IdUser");
 
-                    b.ToTable("Reviews", (string)null);
+                    b.ToTable("Reviews");
                 });
 
             modelBuilder.Entity("TravelSBE.Entity.User", b =>
@@ -404,7 +407,7 @@ namespace TravelSBE.Migrations
                     b.HasIndex("UserName")
                         .IsUnique();
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("TravelsBE.Entity.Experience", b =>
@@ -459,7 +462,7 @@ namespace TravelSBE.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Experiences", (string)null);
+                    b.ToTable("Experiences");
                 });
 
             modelBuilder.Entity("TravelsBE.Entity.ObjectiveSchedule", b =>
@@ -490,7 +493,7 @@ namespace TravelSBE.Migrations
 
                     b.HasIndex("ObjectiveId");
 
-                    b.ToTable("ObjectiveSchedules", (string)null);
+                    b.ToTable("ObjectiveSchedules");
                 });
 
             modelBuilder.Entity("TravelsBE.Entity.ObjectiveType", b =>
@@ -519,7 +522,7 @@ namespace TravelSBE.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ObjectiveTypes", (string)null);
+                    b.ToTable("ObjectiveTypes");
                 });
 
             modelBuilder.Entity("TravelSBE.Entity.Answer", b =>

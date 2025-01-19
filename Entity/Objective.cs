@@ -24,5 +24,6 @@ namespace TravelSBE.Entity
         public List<ObjectiveImage> Images { get; set; } = new List<ObjectiveImage>();
         public List<Review> Reviews { get; set; } = new List<Review>();
 
+
     }
 }

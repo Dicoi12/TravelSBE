@@ -1,3 +1,3 @@
-dotnet ef migrations add ObjectiveSchedule
+dotnet ef migrations add userUnRequired
 dotnet ef database update
 dotnet ef migrations remove
