@@ -11,6 +11,9 @@ obj/
 *.exe
 *.dll
 *.log
+*.jpg
+*.png
+*.jpeg
 
 # ASP.NET and .NET specific
 appsettings.Development.json

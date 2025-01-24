@@ -67,10 +67,10 @@ namespace TravelSBE.Services
             }
 
             var objectiveModel = _mapper.Map<ObjectiveModel>(item);
-
             objectiveModel.Images = item.Images
-                .Select(img => $"/wwwroot{img.FilePath}")
-                .ToList();
+                     .Select(img => $"{_baseUrl}{img.FilePath}")
+                     .ToList();
+
 
             result.Result = objectiveModel;
             return result;
