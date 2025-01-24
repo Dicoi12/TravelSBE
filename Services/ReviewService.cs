@@ -3,6 +3,7 @@ using TravelSBE.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using TravelSBE.Models;
 
 namespace TravelSBE.Services
 {
@@ -23,8 +24,17 @@ namespace TravelSBE.Services
                 .ToListAsync();
         }
 
-        public async Task<Review> AddReview(Review review)
+        public async Task<Review> AddReview(ReviewModel reviewDto)
         {
+            var review = new Review
+            {
+                IdUser = reviewDto.IdUser,
+                IdObjective = reviewDto.IdObjective,
+                Raiting = reviewDto.Raiting,
+                Comment = reviewDto.Comment,
+                DatePosted = reviewDto.DatePosted ?? DateTime.UtcNow
+            };
+
             _context.Reviews.Add(review);
             await _context.SaveChangesAsync();
             return review;

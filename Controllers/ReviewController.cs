@@ -3,6 +3,7 @@ using TravelSBE.Services;
 using TravelSBE.Entity;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using TravelSBE.Models;
 
 namespace TravelSBE.Controllers
 {
@@ -25,7 +26,7 @@ namespace TravelSBE.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Review>> AddReview(Review review)
+        public async Task<ActionResult<Review>> AddReview(ReviewModel review)
         {
             var createdReview = await _reviewService.AddReview(review);
             return CreatedAtAction(nameof(GetReviewById), new { id = createdReview.Id }, createdReview);

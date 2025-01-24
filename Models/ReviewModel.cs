@@ -8,7 +8,7 @@ namespace TravelSBE.Models
     {
         public int Id { get; set; }
         public int IdUser { get; set; }
-        public User User { get; set; }
+        public User? User { get; set; }
         public int? IdObjective { get; set; }
         public Objective? Objective { get; set; }
         public int Raiting { get; set; }
