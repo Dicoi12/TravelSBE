@@ -30,27 +30,43 @@ namespace TravelSBE.Services
         {
             var result = new ServiceResult<List<ObjectiveModel>>();
 
-            var query = _context.Objectives.Include(x => x.Images);
-
+            var query = _context.Objectives
+                .Include(x => x.Images)
+                .Include(x => x.Reviews);
 
             var list = await query.ToListAsync();
+
             if (!string.IsNullOrWhiteSpace(search))
             {
                 list = list.Where(x => x.Name.ToLower().Contains(search.ToLower())).ToList();
             }
+
             var objectiveModels = _mapper.Map<List<ObjectiveModel>>(list);
 
             foreach (var model in objectiveModels)
             {
                 var originalObjective = list.First(x => x.Id == model.Id);
+
+                // Set image URLs
                 model.Images = originalObjective.Images
                     .Select(img => $"{_baseUrl}{img.FilePath}")
                     .ToList();
+
+                // Compute the average review rating
+                if (originalObjective.Reviews.Any())
+                {
+                    model.MedieReview = (int)Math.Round(originalObjective.Reviews.Average(r => r.Raiting));
+                }
+                else
+                {
+                    model.MedieReview = null; // No reviews, set to null or 0 if preferred
+                }
             }
 
             result.Result = objectiveModels;
             return result;
         }
+
 
         public async Task<ServiceResult<ObjectiveModel>> GetObjectiveByIdAsync(int id)
         {
