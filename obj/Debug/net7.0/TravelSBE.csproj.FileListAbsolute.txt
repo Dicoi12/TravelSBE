@@ -127,4 +127,3 @@ C:\Users\winko\Source\Repos\TravelSBE\obj\Debug\net7.0\refint\TravelsBE.dll
 C:\Users\winko\Source\Repos\TravelSBE\obj\Debug\net7.0\TravelsBE.pdb
 C:\Users\winko\Source\Repos\TravelSBE\obj\Debug\net7.0\TravelsBE.genruntimeconfig.cache
 C:\Users\winko\Source\Repos\TravelSBE\obj\Debug\net7.0\ref\TravelsBE.dll
-C:\Users\winko\Source\Repos\TravelSBE\obj\Debug\net7.0\staticwebassets.upToDateCheck.txt

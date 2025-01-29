@@ -62,8 +62,7 @@ public class ObjectiveImageService : IObjectiveImageService
                 IdObjective = objectiveId??null,
                 IdEvent = eventId,
                 FilePath = $"/uploads/images/{fileName}",
-                ImageMimeType = imageFile.ContentType,
-                IdItinerary = idItinerary,
+                ImageMimeType = imageFile.ContentType
             };
 
             _context.ObjectiveImages.Add(objectiveImage);

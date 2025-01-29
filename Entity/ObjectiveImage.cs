@@ -20,9 +20,5 @@ namespace TravelSBE.Entity
         [ForeignKey("IdEvent")]
         public int? IdEvent { get; set; }
         public Event? Event { get; set; }
-
-        [ForeignKey("IdItinerary")]
-        public int? IdItinerary { get; set; }
-        public Itinerary? Itinerary { get; set; }
     }
 }

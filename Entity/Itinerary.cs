@@ -9,10 +9,15 @@ namespace TravelSBE.Entity
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
+
+        [Required]
         public string Name { get; set; }
+
         [ForeignKey("IdUser")]
         public int? IdUser { get; set; }
         public User? User { get; set; }
-        public List<ObjectiveImage> Images { get; set; } = new List<ObjectiveImage>();
+
+        // Lista cu detaliile itinerariului
+        public List<ItineraryDetail> ItineraryDetails { get; set; } = new List<ItineraryDetail>();
     }
 }

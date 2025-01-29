@@ -20,6 +20,8 @@ namespace TravelSBE.Entity
         public int? Type { get; set; }
         public ObjectiveType? ObjectiveType { get; set; }
         public string? Website { get; set; }
+        public string? Interval { get; set; }
+        public string? Pret { get; set; }
 
         public List<ObjectiveImage> Images { get; set; } = new List<ObjectiveImage>();
         public List<Review> Reviews { get; set; } = new List<Review>();

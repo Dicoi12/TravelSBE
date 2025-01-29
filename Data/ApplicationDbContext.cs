@@ -57,9 +57,10 @@ namespace TravelSBE.Data
                    .HasForeignKey(e => e.IdEvent);
 
             builder.Entity<Itinerary>()
-                .HasMany(e => e.Images)
+                   .HasMany(e => e.ItineraryDetails)
                    .WithOne(e => e.Itinerary)
-                   .HasForeignKey(e => e.IdItinerary);
+                   .HasForeignKey(e => e.Id);
+
 
             builder.Entity<ObjectiveSchedule>()
                 .Property(s => s.DayOfWeek)

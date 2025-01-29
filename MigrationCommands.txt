@@ -1,3 +1,3 @@
-dotnet ef migrations add reviewIdGenerated
+dotnet ef migrations add itineraryNewModels
 dotnet ef database update
 dotnet ef migrations remove
