@@ -11,7 +11,7 @@ namespace TravelSBE.Entity
         public int Id { get; set; }
 
         [Required]
-        public string Name { get; set; }
+        public string Name { get; set; } = "";
 
         public string? Descriere { get; set; }
 
