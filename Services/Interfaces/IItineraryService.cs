@@ -12,4 +12,5 @@ public interface IItineraryService
     public Task<ServiceResult<ItineraryModel>>EditItineraryByUser(ItineraryModel model);
     public Task<ServiceResult<bool>> DeleteItineraryByUser(int id,int userId);
     public Task<ServiceResult<ItineraryModel>> AddItinerary(ItineraryDTO model);
+    public Task<string> GenerateItineraryAsync(int userId);
 }

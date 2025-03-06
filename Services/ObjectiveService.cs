@@ -2,6 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Text.Json;
+using System.Text;
 using System.Threading.Tasks;
 using TravelSBE.Data;
 using TravelSBE.Entity;
@@ -13,16 +16,18 @@ namespace TravelSBE.Services
 {
     public class ObjectiveService : IObjectiveService
     {
+        private readonly HttpClient _httpClient;
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
         private readonly string _baseUrl;
 
-        public ObjectiveService(ApplicationDbContext context, IMapper mapper, IConfiguration configuration)
+        public ObjectiveService(ApplicationDbContext context, IMapper mapper, IConfiguration configuration, HttpClient httpClient)
         {
             _context = context;
             _mapper = mapper;
             _baseUrl = configuration["BaseUrl"];
+            _httpClient = httpClient;
         }
 
 
@@ -126,6 +131,10 @@ namespace TravelSBE.Services
                 result.IsSuccessful = false;
                 return result;
             }
+            if (string.IsNullOrEmpty(objective.Description))
+            {
+                objective.Description = await GenerateObjectiveDetailsAsync(objective.Name, objective.City);
+            }
             objective.CreatedAt = DateTime.UtcNow;
             objective.UpdatedAt = DateTime.UtcNow;
             var mapped = _mapper.Map<Objective>(objective);
@@ -166,7 +175,7 @@ namespace TravelSBE.Services
         }
         private double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
         {
-            const double R = 6371; 
+            const double R = 6371;
             var lat = (lat2 - lat1) * (Math.PI / 180);
             var lon = (lon2 - lon1) * (Math.PI / 180);
 
@@ -177,6 +186,37 @@ namespace TravelSBE.Services
             var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
             return R * c; // Distance in km 
         }
+        private async Task<string> GenerateObjectiveDetailsAsync(string name, string city)
+        {
+            string prompt = $"Descrie succint obiectivul turistic '{name}' din '{city}' în română.";
+
+            var requestBody = new
+            {
+                model = "phi-4", // Schimbă cu modelul ales
+                messages = new[]
+                {
+            new { role = "system", content = "Oferă răspunsuri scurte și precise despre turism." },
+            new { role = "user", content = prompt }
+        }
+            };
+
+            var requestContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+            var response = await _httpClient.PostAsync("http://localhost:1234/v1/chat/completions", requestContent);
+
+            if (!response.IsSuccessStatusCode)
+                return "Eroare generare descriere.";
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var result = JsonDocument.Parse(responseContent);
+
+            return result.RootElement
+                .GetProperty("choices")[0]
+                .GetProperty("message")
+                .GetProperty("content")
+                .GetString() ?? "Descriere indisponibilă.";
+        }
+
+
 
     }
 }

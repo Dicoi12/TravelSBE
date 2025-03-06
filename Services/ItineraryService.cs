@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+using System.Text;
 using TravelsBE.Models;
 using TravelsBE.Services.Interfaces;
 using TravelSBE.Data;
@@ -11,10 +13,12 @@ namespace TravelsBE.Services
 {
     public class ItineraryService : IItineraryService
     {
+        private readonly HttpClient _httpClient;
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
-        public ItineraryService(ApplicationDbContext context, IMapper mapper)
+        public ItineraryService(HttpClient httpClient, ApplicationDbContext context, IMapper mapper)
         {
+            _httpClient = httpClient;
             _context = context;
             _mapper = mapper;
         }
@@ -71,6 +75,48 @@ namespace TravelsBE.Services
                 return result;
             }
         }
+        public async Task<string> GenerateItineraryAsync(int userId)
+        {
+            var objectives = await _context.Objectives
+        .Select(o => new { o.Id, o.Name, o.Latitude, o.Longitude })
+        .ToListAsync();
+
+            // Construim lista de obiective pentru prompt
+            string objectivesList = string.Join(", ", objectives.Select(o => $"{{ \"id\": {o.Id}, \"name\": \"{o.Name}\", \"latitude\": {o.Latitude}, \"longitude\": {o.Longitude} }}"));
+
+            string prompt = $@"Îți voi furniza o listă de obiective turistice, fiecare având ID, nume și coordonate geografice.
+    Utilizatorul se află la locația ({45.9968}, {24.997}).
+    Te rog să identifici cele mai apropiate 5 obiective față de utilizator și să returnezi doar ID-urile acestora, fără explicații suplimentare.
+
+    Format JSON dorit:
+    {{
+      ""objectives"": [1, 4, 7, 12, 15]
+    }}
+
+    Lista de obiective disponibile:
+    [{objectivesList}].";
+
+            var requestBody = new
+            {
+                model = "your-model-name",
+                messages = new[]
+                {
+            new { role = "system", content = "You are a travel assistant." },
+            new { role = "user", content = prompt }
+        }
+            };
+
+            var requestContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+            var response = await _httpClient.PostAsync("http://localhost:1234/v1/chat/completions", requestContent);
+            var responseContent = await response.Content.ReadAsStringAsync();
+
+            // Parsăm răspunsul JSON
+            var result = JsonDocument.Parse(responseContent);
+            string itineraryJson = result.RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
+
+            return itineraryJson;
+        }
+
         public async Task<ServiceResult<ItineraryModel>> AddItinerary(ItineraryDTO model)
         {
             ServiceResult<ItineraryModel> result = new();

@@ -29,6 +29,12 @@ namespace TravelSBE.Controllers
         {
             return await _service.AddItinerary(model);
         }
+        [HttpGet]
+        [Route("GenerateItineraryAsync")]
+        public async Task<string> GenerateItineraryAsync()
+        {
+            return await _service.GenerateItineraryAsync(1);
+        }
 
 
 
