@@ -60,7 +60,9 @@ namespace TravelSBE
             builder.Services.AddScoped<IReviewService, ReviewService>();
             builder.Services.AddScoped<IExperienceService, ExperienceService>();
             builder.Services.AddScoped<IItineraryService, ItineraryService>();
+            builder.Services.AddScoped<IObjectiveTypeService, ObjectiveTypeService>();
             builder.Services.AddHttpClient<ItineraryService>();
+
 
 
             builder.Services.AddSwaggerGen(c =>

@@ -11,6 +11,7 @@ using TravelSBE.Entity;
 using TravelSBE.Models;
 using TravelSBE.Services.Interfaces;
 using TravelSBE.Utils;
+using System.Security.AccessControl;
 
 namespace TravelSBE.Services
 {
@@ -79,6 +80,7 @@ namespace TravelSBE.Services
 
             var item = await _context.Objectives
                 .Include(x => x.Images)
+                .Include(x=>x.Reviews)
                 .FirstOrDefaultAsync(x => x.Id == id);
 
             if (item == null)
@@ -92,6 +94,15 @@ namespace TravelSBE.Services
                      .Select(img => $"{_baseUrl}{img.FilePath}")
                      .ToList();
 
+            if (item.Reviews.Any())
+            {
+                objectiveModel.MedieReview = item.Reviews.Average(r => r.Raiting);
+            }
+            else
+            {
+                objectiveModel.MedieReview = null;
+            }
+
 
             result.Result = objectiveModel;
             return result;
@@ -104,6 +115,7 @@ namespace TravelSBE.Services
 
             var list = await _context.Objectives
                 .Include(x => x.Images)
+                .Include(x => x.Reviews)
                 .ToListAsync();
 
             var objectiveModels = _mapper.Map<List<ObjectiveModel>>(list);
@@ -111,17 +123,20 @@ namespace TravelSBE.Services
             foreach (var objective in objectiveModels)
             {
                 var originalObjective = list.First(x => x.Id == objective.Id);
+
                 objective.Images = originalObjective.Images
                     .Select(img => $"{_baseUrl}{img.FilePath}")
                     .ToList();
 
                 var distance = CalculateDistance(latitude, longitude, (double)objective.Latitude, (double)objective.Longitude);
                 objective.Distance = distance;
+
             }
 
             result.Result = objectiveModels.OrderBy(o => o.Id).ToList();
             return result;
         }
+
         public async Task<ServiceResult<ObjectiveModel>> CreateObjectiveAsync(ObjectiveModel objective)
         {
             ServiceResult<ObjectiveModel> result = new();

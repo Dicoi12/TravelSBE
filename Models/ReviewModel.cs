@@ -10,7 +10,6 @@ namespace TravelSBE.Models
         public int IdUser { get; set; }
         public User? User { get; set; }
         public int? IdObjective { get; set; }
-        public Objective? Objective { get; set; }
         public int Raiting { get; set; }
         public string? Comment { get; set; }
         public DateTime? DatePosted { get; set; }
