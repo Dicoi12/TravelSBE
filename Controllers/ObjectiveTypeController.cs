@@ -31,7 +31,7 @@ namespace TravelsBE.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] ObjectiveType objectiveType)
+        public async Task<IActionResult> Create([FromQuery] ObjectiveType objectiveType)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             var created = await _objectiveTypeService.CreateAsync(objectiveType);

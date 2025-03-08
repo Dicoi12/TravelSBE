@@ -37,6 +37,7 @@ namespace TravelSBE.Services
             var result = new ServiceResult<List<ObjectiveModel>>();
 
             var query = _context.Objectives
+                .Include(x=>x.ObjectiveType)
                 .Include(x => x.Images)
                 .Include(x => x.Reviews);
 
@@ -79,6 +80,7 @@ namespace TravelSBE.Services
             var result = new ServiceResult<ObjectiveModel>();
 
             var item = await _context.Objectives
+                .Include(x=>x.ObjectiveType)
                 .Include(x => x.Images)
                 .Include(x=>x.Reviews)
                 .FirstOrDefaultAsync(x => x.Id == id);

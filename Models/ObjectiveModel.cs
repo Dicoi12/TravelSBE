@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using System.Globalization;
+using TravelsBE.Entity;
 using TravelSBE.Entity;
 using TravelSBE.Entity.Helper;
 
@@ -19,6 +20,8 @@ namespace TravelSBE.Models
         public string? Website { get; set; }
         public string? Interval { get; set; }
         public string? Pret { get; set; }
+        public int? Type { get; set; }
+        public ObjectiveType? ObjectiveType { get; set; }
         public List<ReviewModel> Reviews { get; set; } = new List<ReviewModel>();
     }
 }
