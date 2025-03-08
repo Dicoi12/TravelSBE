@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TravelsBE.Dtos;
+using TravelsBE.Models.Filters;
 using TravelSBE.Entity;
 using TravelSBE.Models;
 using TravelSBE.Services.Interfaces;
@@ -26,10 +27,10 @@ namespace TravelSBE.Controllers
             var objectives = await _objectiveService.GetObjectivesAsync(search);
             return objectives;
         }
-        [HttpGet("GetLocalObjectives")]
-        public async Task<ServiceResult<List<ObjectiveModel>>> GetLocalObjectives([FromQuery] GetLocalObjectivesRequest paylaod)
+        [HttpPost("GetLocalObjectives")]
+        public async Task<ServiceResult<List<ObjectiveModel>>> GetLocalObjectives([FromQuery]ObjectiveFilterModel filter)
         {
-            return await _objectiveService.GetLocalObjectives(paylaod.Latitude, paylaod.Latitude);
+            return await _objectiveService.GetLocalObjectives(filter);
         }
 
         [HttpGet("{id}")]

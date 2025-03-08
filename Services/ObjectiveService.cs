@@ -12,6 +12,7 @@ using TravelSBE.Models;
 using TravelSBE.Services.Interfaces;
 using TravelSBE.Utils;
 using System.Security.AccessControl;
+using TravelsBE.Models.Filters;
 
 namespace TravelSBE.Services
 {
@@ -111,15 +112,31 @@ namespace TravelSBE.Services
         }
 
 
-        public async Task<ServiceResult<List<ObjectiveModel>>> GetLocalObjectives(double latitude, double longitude)
+        public async Task<ServiceResult<List<ObjectiveModel>>> GetLocalObjectives(ObjectiveFilterModel filter)
         {
             var result = new ServiceResult<List<ObjectiveModel>>();
 
-            var list = await _context.Objectives
+            var query = _context.Objectives
                 .Include(x => x.Images)
                 .Include(x => x.Reviews)
-                .ToListAsync();
+                .AsQueryable();
 
+            if (!string.IsNullOrEmpty(filter.Name))
+            {
+                query = query.Where(o => o.Name.Contains(filter.Name));
+            }
+
+            if (filter.TypeId.HasValue)
+            {
+                query = query.Where(o => o.Type == filter.TypeId);
+            }
+
+            if (filter.MinRating.HasValue)
+            {
+                query = query.Where(o => o.Reviews.Average(r => r.Raiting) >= filter.MinRating);
+            }
+
+            var list = await query.ToListAsync();
             var objectiveModels = _mapper.Map<List<ObjectiveModel>>(list);
 
             foreach (var objective in objectiveModels)
@@ -130,12 +147,24 @@ namespace TravelSBE.Services
                     .Select(img => $"{_baseUrl}{img.FilePath}")
                     .ToList();
 
-                var distance = CalculateDistance(latitude, longitude, (double)objective.Latitude, (double)objective.Longitude);
-                objective.Distance = distance;
+                if (filter.Latitude.HasValue && filter.Longitude.HasValue)
+                {
+                    var distance = CalculateDistance(
+                        filter.Latitude.Value,
+                        filter.Longitude.Value,
+                        (double)objective.Latitude,
+                        (double)objective.Longitude);
 
+                    objective.Distance = distance;
+
+                    if (filter.MaxDistance.HasValue && distance > filter.MaxDistance.Value)
+                    {
+                        continue; // Exclude obiectivele care depășesc distanța maximă
+                    }
+                }
             }
 
-            result.Result = objectiveModels.OrderBy(o => o.Id).ToList();
+            result.Result = objectiveModels.OrderBy(o => o.Distance).ToList();
             return result;
         }
 
