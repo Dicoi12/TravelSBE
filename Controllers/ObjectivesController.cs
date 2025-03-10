@@ -28,7 +28,7 @@ namespace TravelSBE.Controllers
             return objectives;
         }
         [HttpPost("GetLocalObjectives")]
-        public async Task<ServiceResult<List<ObjectiveModel>>> GetLocalObjectives([FromQuery]ObjectiveFilterModel filter)
+        public async Task<ServiceResult<List<ObjectiveModel>>> GetLocalObjectives(ObjectiveFilterModel filter)
         {
             return await _objectiveService.GetLocalObjectives(filter);
         }

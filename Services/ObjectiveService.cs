@@ -123,15 +123,15 @@ namespace TravelSBE.Services
 
             if (!string.IsNullOrEmpty(filter.Name))
             {
-                query = query.Where(o => o.Name.Contains(filter.Name));
+                query = query.Where(o => EF.Functions.Like(o.Name.ToLower(), $"%{filter.Name.ToLower()}%"));
             }
 
-            if (filter.TypeId.HasValue)
+            if (filter.TypeId.HasValue && filter.TypeId!=0)
             {
                 query = query.Where(o => o.Type == filter.TypeId);
             }
 
-            if (filter.MinRating.HasValue)
+            if (filter.MinRating.HasValue&&filter.MinRating!= 0)
             {
                 query = query.Where(o => o.Reviews.Average(r => r.Raiting) >= filter.MinRating);
             }
