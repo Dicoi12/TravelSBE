@@ -121,10 +121,10 @@ C:\Users\winko\Source\Repos\TravelSBE\obj\Debug\net7.0\staticwebassets\msbuild.b
 C:\Users\winko\Source\Repos\TravelSBE\obj\Debug\net7.0\staticwebassets\msbuild.buildMultiTargeting.TravelsBE.props
 C:\Users\winko\Source\Repos\TravelSBE\obj\Debug\net7.0\staticwebassets\msbuild.buildTransitive.TravelsBE.props
 C:\Users\winko\Source\Repos\TravelSBE\obj\Debug\net7.0\staticwebassets.pack.json
-C:\Users\winko\Source\Repos\TravelSBE\obj\Debug\net7.0\staticwebassets.upToDateCheck.txt
 C:\Users\winko\Source\Repos\TravelSBE\obj\Debug\net7.0\TravelsBE.csproj.Up2Date
 C:\Users\winko\Source\Repos\TravelSBE\obj\Debug\net7.0\TravelsBE.dll
 C:\Users\winko\Source\Repos\TravelSBE\obj\Debug\net7.0\refint\TravelsBE.dll
 C:\Users\winko\Source\Repos\TravelSBE\obj\Debug\net7.0\TravelsBE.pdb
 C:\Users\winko\Source\Repos\TravelSBE\obj\Debug\net7.0\TravelsBE.genruntimeconfig.cache
 C:\Users\winko\Source\Repos\TravelSBE\obj\Debug\net7.0\ref\TravelsBE.dll
+C:\Users\winko\Source\Repos\TravelSBE\obj\Debug\net7.0\staticwebassets.upToDateCheck.txt
