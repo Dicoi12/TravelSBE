@@ -27,6 +27,12 @@ namespace TravelSBE.Controllers
             var objectives = await _objectiveService.GetObjectivesAsync(search);
             return objectives;
         }
+
+        [HttpGet("ImportObjectives")]
+        public ServiceResult<bool> ImportObjectives()
+        {
+            return _objectiveService.InsertDefaultObjectives();
+        }
         [HttpPost("GetLocalObjectives")]
         public async Task<ServiceResult<List<ObjectiveModel>>> GetLocalObjectives(ObjectiveFilterModel filter)
         {
