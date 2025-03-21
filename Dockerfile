@@ -4,7 +4,8 @@ WORKDIR /app
 
 # Copy the solution and project files
 COPY *.sln ./
-COPY TravelsBE.csproj ./
+COPY src/TravelsBE/TravelsBE.csproj ./TravelsBE/
+
 
 # Copy the rest of the application files
 COPY . ./
