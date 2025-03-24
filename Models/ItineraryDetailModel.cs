@@ -8,9 +8,10 @@ namespace TravelSBE.Models
     {
         public int Id { get; set; }
         public int? IdObjective { get; set; }
-        public Objective? Objective { get; set; }
+        public ObjectiveModel? Objective { get; set; }
         public int? IdEvent { get; set; }
-        public Event? Event { get; set; }
+        public EventModel? Event { get; set; }
         public int VisitOrder { get; set; }
+        public string[] Images { get; set; } = new string[0];
     }
 }

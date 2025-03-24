@@ -27,9 +27,9 @@ public class ObjectiveImageController : ControllerBase
     }
 
     [HttpPost("upload")]
-    public async Task<ServiceResult<int>> UploadImage([FromForm] IFormFile imageFile, int? objectiveId=null, int? eventId = null)
+    public async Task<ServiceResult<int>> UploadImage([FromForm] IFormFile imageFile, int? objectiveId=null, int? eventId = null,int? idExperience =null)
     {
-        var result = await _imageService.UploadImageAsync(imageFile, objectiveId,eventId);
+        var result = await _imageService.UploadImageAsync(imageFile, objectiveId,eventId,idExperience);
         return result;
     }
 

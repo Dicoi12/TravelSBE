@@ -12,6 +12,8 @@ namespace TravelSBE.Entity
 
         [Required]
         public string Name { get; set; }
+        [Required]
+        public string Description { get; set; } = string.Empty;
 
         [ForeignKey("IdUser")]
         public int? IdUser { get; set; }

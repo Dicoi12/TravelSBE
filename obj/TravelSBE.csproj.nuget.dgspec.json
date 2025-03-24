@@ -1,15 +1,15 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\winko\\source\\repos\\Dicoi12\\TravelSBE\\TravelsBE.csproj": {}
+    "C:\\Users\\winko\\source\\repos\\Dicoi12\\TravelSBE\\TravelSBE.csproj": {}
   },
   "projects": {
-    "C:\\Users\\winko\\source\\repos\\Dicoi12\\TravelSBE\\TravelsBE.csproj": {
+    "C:\\Users\\winko\\source\\repos\\Dicoi12\\TravelSBE\\TravelSBE.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\winko\\source\\repos\\Dicoi12\\TravelSBE\\TravelsBE.csproj",
-        "projectName": "TravelsBE",
-        "projectPath": "C:\\Users\\winko\\source\\repos\\Dicoi12\\TravelSBE\\TravelsBE.csproj",
+        "projectUniqueName": "C:\\Users\\winko\\source\\repos\\Dicoi12\\TravelSBE\\TravelSBE.csproj",
+        "projectName": "TravelSBE",
+        "projectPath": "C:\\Users\\winko\\source\\repos\\Dicoi12\\TravelSBE\\TravelSBE.csproj",
         "packagesPath": "C:\\Users\\winko\\.nuget\\packages\\",
         "outputPath": "C:\\Users\\winko\\source\\repos\\Dicoi12\\TravelSBE\\obj\\",
         "projectStyle": "PackageReference",

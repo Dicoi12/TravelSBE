@@ -1,196 +1,101 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
-using System.Text;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using TravelsBE.Models;
 using TravelsBE.Services.Interfaces;
 using TravelSBE.Data;
 using TravelSBE.Entity;
 using TravelSBE.Models;
+using TravelSBE.Services.Interfaces;
 using TravelSBE.Utils;
 
-namespace TravelsBE.Services
+namespace TravelSBE.Services
 {
     public class ItineraryService : IItineraryService
     {
-        private readonly HttpClient _httpClient;
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
-        public ItineraryService(HttpClient httpClient, ApplicationDbContext context, IMapper mapper)
+
+        public ItineraryService(ApplicationDbContext context, IMapper mapper)
         {
-            _httpClient = httpClient;
             _context = context;
             _mapper = mapper;
         }
-        public async Task<ServiceResult<List<ItineraryModel>>> GetAllAsync()
+
+        public async Task<ServiceResult<Itinerary>> AddOrUpdateItineraryAsync(ItineraryDTO itineraryDto)
         {
-            var result = new ServiceResult<List<ItineraryModel>>();
-            try
-            {
-                var list = await _context.Itineraries.ToListAsync();
-                result.IsSuccessful = true;
-                var mapped = _mapper.Map<List<ItineraryModel>>(list);
-                result.Result = mapped;
-                return result;
-            }
-            catch (Exception ex)
-            {
-                result.ValidationMessage = ex.Message;
-                return result;
-            }
-        }
+            var result = new ServiceResult<Itinerary>();
 
-        public async Task<ServiceResult<List<ItineraryModel>>> GetByUserId(int userId)
-        {
-            var result = new ServiceResult<List<ItineraryModel>>();
-            try
+            var itinerary = await _context.Itineraries
+                .Include(i => i.ItineraryDetails)
+                .FirstOrDefaultAsync(i => i.Id == itineraryDto.Id);
+
+            if (itinerary == null)
             {
-                var list = await _context.Itineraries.Where(x => x.IdUser == userId).ToListAsync();
-                result.IsSuccessful = true;
-                var mapped = _mapper.Map<List<ItineraryModel>>(list);
-                result.Result = mapped;
-                return result;
-            }
-            catch (Exception ex)
-            {
-                result.ValidationMessage = ex.Message;
-                return result;
-            }
-        }
-
-        public async Task<ServiceResult<ItineraryModel>> AddItineraryByUser(ItineraryModel model)
-        {
-            ServiceResult<ItineraryModel> result = new();
-            try
-            {
-                var mapped = _mapper.Map<Itinerary>(model);
-                _context.Add(mapped);
-                await _context.SaveChangesAsync();
-                result.Result = model;
-                return result;
-            }
-            catch (Exception ex)
-            {
-                result.ValidationMessage = ex.Message;
-                return result;
-            }
-        }
-        public async Task<string> GenerateItineraryAsync(int userId)
-        {
-            var objectives = await _context.Objectives
-        .Select(o => new { o.Id, o.Name, o.Latitude, o.Longitude })
-        .ToListAsync();
-
-            // Construim lista de obiective pentru prompt
-            string objectivesList = string.Join(", ", objectives.Select(o => $"{{ \"id\": {o.Id}, \"name\": \"{o.Name}\", \"latitude\": {o.Latitude}, \"longitude\": {o.Longitude} }}"));
-
-            string prompt = $@"Îți voi furniza o listă de obiective turistice, fiecare având ID, nume și coordonate geografice.
-    Utilizatorul se află la locația ({45.9968}, {24.997}).
-    Te rog să identifici cele mai apropiate 5 obiective față de utilizator și să returnezi doar ID-urile acestora, fără explicații suplimentare.
-
-    Format JSON dorit:
-    {{
-      ""objectives"": [1, 4, 7, 12, 15]
-    }}
-
-    Lista de obiective disponibile:
-    [{objectivesList}].";
-
-            var requestBody = new
-            {
-                model = "your-model-name",
-                messages = new[]
+                itinerary = new Itinerary
                 {
-            new { role = "system", content = "You are a travel assistant." },
-            new { role = "user", content = prompt }
-        }
-            };
-
-            var requestContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync("http://localhost:1234/v1/chat/completions", requestContent);
-            var responseContent = await response.Content.ReadAsStringAsync();
-
-            // Parsăm răspunsul JSON
-            var result = JsonDocument.Parse(responseContent);
-            string itineraryJson = result.RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
-
-            return itineraryJson;
-        }
-
-        public async Task<ServiceResult<ItineraryModel>> AddItinerary(ItineraryDTO model)
-        {
-            ServiceResult<ItineraryModel> result = new();
-            try
-            {
-                if (!(model.EventsIds.Any() && model.ObjectivesIds.Any()))
-                {
-                    result.ValidationMessage = "Nu ati selectat niciun obiectiv sau eveniment";
-                    return result;
-                }
-                if (string.IsNullOrEmpty(model.Name))
-                {
-                    result.ValidationMessage = "Nu ati ales denumirea itinerariului!";
-                    return result;
-                }
-                Itinerary it = new()
-                {
-                    Name = model.Name,
-                    IdUser = model.IdUser,
+                    Name = itineraryDto.Name,
+                    Description = itineraryDto.Description,
+                    IdUser = itineraryDto.IdUser,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
                 };
-                _context.Add(it);
-                await _context.SaveChangesAsync();
-                List<ItineraryDetail> idList = new();
-                foreach (var obj in model.ObjectivesIds)
-                {
-                    ItineraryDetail id = new()
-                    {
-                        Name = "",
-                        IdObjective = obj,
-                        IdItinerary = it.Id,
-                    };
-                    idList.Add(id);
-                }
-                foreach (var ev in model.EventsIds)
-                {
-                    ItineraryDetail id = new()
-                    {
-                        Name = "",
-                        IdEvent = ev,
-                        IdItinerary = it.Id,
-                    };
-                    idList.Add(id);
-                }
-                _context.AddRange(idList);
-                await _context.SaveChangesAsync();
-                result.Result = new ItineraryModel();
-                return result;
+                _context.Itineraries.Add(itinerary);
             }
-            catch (Exception ex)
+            else
             {
-                result.ValidationMessage = ex.Message;
-                return result;
+                itinerary.Name = itineraryDto.Name;
+                itinerary.Description = itineraryDto.Description;
+                itinerary.IdUser = itineraryDto.IdUser;
+                itinerary.UpdatedAt = DateTime.UtcNow;
+
+                _context.ItineraryDetails.RemoveRange(itinerary.ItineraryDetails);
             }
+
+            foreach (var detailDto in itineraryDto.ItineraryDetails)
+            {
+                var detail = new ItineraryDetail
+                {
+                    Name = detailDto.Name,
+                    Descriere = detailDto.Descriere,
+                    IdObjective = detailDto.IdObjective,
+                    IdEvent = detailDto.IdEvent,
+                    VisitOrder = detailDto.VisitOrder,
+                    Itinerary = itinerary,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                itinerary.ItineraryDetails.Add(detail);
+            }
+
+            await _context.SaveChangesAsync();
+            result.Result = itinerary;
+            return result;
         }
 
         public async Task<ServiceResult<bool>> DeleteItineraryByUser(int id, int userId)
         {
-            ServiceResult<bool> result = new();
+            var result = new ServiceResult<bool>();
+            var itinerary = _context.Itineraries.FirstOrDefault(i => i.Id == id && i.IdUser == userId);
+            if (itinerary == null)
+            {
+                result.ValidationMessage = "Itinerary not found";
+                return result;
+            }
+            var itineraryDetails = _context.ItineraryDetails.Where(i => i.IdItinerary == id);
+            _context.Itineraries.Remove(itinerary);
+            if (itineraryDetails.Any())
+            {
+                _context.ItineraryDetails.RemoveRange(itineraryDetails);
+            }
             try
             {
-                var entityToRemove = await _context.Itineraries.FirstOrDefaultAsync(s => s.IdUser == userId && s.Id == id);
-                if (entityToRemove != null)
-                {
-                    _context.Remove(entityToRemove);
-                    await _context.SaveChangesAsync();
-                    result.Result = true;
-                    return result;
-                }
-                else
-                {
-                    result.IsSuccessful = false;
-                    result.Result = false;
-                    return result;
-                }
+                await _context.SaveChangesAsync();
+                result.IsSuccessful = true;
+                result.Result = true;
+                return result;
             }
             catch (Exception ex)
             {
@@ -199,17 +104,55 @@ namespace TravelsBE.Services
             }
         }
 
-        public async Task<ServiceResult<ItineraryModel>> EditItineraryByUser(ItineraryModel model)
+        public async Task<ServiceResult<List<ItineraryPageDTO>>> GetAllAsync()
         {
-            ServiceResult<ItineraryModel> result = new();
-            var entity = await _context.Itineraries.FirstOrDefaultAsync(x => x.Id == model.Id);
-            entity.Name = model.Name;
-            entity.IdUser = model.Id;
-            _context.Update(entity);
-            await _context.SaveChangesAsync();
-            result.Result = _mapper.Map<ItineraryModel>(entity);
+            var result = new ServiceResult<List<ItineraryPageDTO>>();
+            var itineraries = await _context.Itineraries
+                .Include(i => i.ItineraryDetails)
+                    .ThenInclude(i => i.Objective)
+                        .ThenInclude(o => o.Images)
+                .Include(i => i.ItineraryDetails)
+                    .ThenInclude(i => i.Event)
+                        .ThenInclude(e => e.Images)
+                .Where(i => i.ItineraryDetails.Any())
+                .ToListAsync();
+
+            var itineraryPageDTOs = itineraries.Select(itinerary => new ItineraryPageDTO
+            {
+                Id = itinerary.Id,
+                Name = itinerary.Name,
+                Description = itinerary.Description,
+                ItineraryDetails = itinerary.ItineraryDetails.Select(detail => new ItineraryDetailModel
+                {
+                    Id = detail.Id,
+                    IdObjective = detail.IdObjective,
+                    Objective = detail.Objective != null ? new ObjectiveModel
+                    {
+                        Id = detail.Objective.Id,
+                        Name = detail.Objective.Name,
+                        Description = detail.Objective.Description,
+                        Images = ImageHelper.ConvertToImageUrls(detail.Objective.Images)
+                    } : null,
+                    IdEvent = detail.IdEvent,
+                    Event = detail.Event != null ? new EventModel
+                    {
+                        Id = detail.Event.Id,
+                        Name = detail.Event.Name,
+                        Description = detail.Event.Description,
+                        Images = ImageHelper.ConvertToImageUrls(detail.Event.Images)
+                    } : null,
+                    VisitOrder = detail.VisitOrder
+                }).ToArray() 
+            }).ToList();
+
+            result.Result = itineraryPageDTOs;
             return result;
         }
 
+
+        public Task<ServiceResult<List<ItineraryModel>>> GetByUserId(int userId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

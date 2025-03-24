@@ -29,7 +29,7 @@ public class ObjectiveImageService : IObjectiveImageService
             .ToListAsync();
     }
 
-    public async Task<ServiceResult<int>> UploadImageAsync(IFormFile imageFile, int? objectiveId, int? eventId=null, int? idItinerary=null)
+    public async Task<ServiceResult<int>> UploadImageAsync(IFormFile imageFile, int? objectiveId, int? eventId = null, int? idExperience = null, int? idItinerary = null)
     {
         var result = new ServiceResult<int>();
 
@@ -59,8 +59,9 @@ public class ObjectiveImageService : IObjectiveImageService
 
             var objectiveImage = new ObjectiveImage
             {
-                IdObjective = objectiveId??null,
+                IdObjective = objectiveId ?? null,
                 IdEvent = eventId,
+                IdExperienta = idExperience,
                 FilePath = $"/uploads/images/{fileName}",
                 ImageMimeType = imageFile.ContentType
             };

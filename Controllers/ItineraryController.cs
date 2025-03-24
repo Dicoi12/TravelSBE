@@ -1,10 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using TravelsBE.Models;
 using TravelsBE.Services.Interfaces;
-using TravelSBE.Models;
-using TravelSBE.Services.Interfaces;
+using TravelSBE.Entity;
 using TravelSBE.Utils;
 
 namespace TravelSBE.Controllers
@@ -20,20 +17,14 @@ namespace TravelSBE.Controllers
             _service = service;
         }
         [HttpGet]
-        public async Task<ServiceResult<List<ItineraryModel>>> GetAllAsync()
+        public async Task<ServiceResult<List<ItineraryPageDTO>>> GetAllAsync()
         {
             return await _service.GetAllAsync();
         }
         [HttpPost]
-        public async Task<ServiceResult<ItineraryModel>> AddItinerary(ItineraryDTO model)
+        public async Task<ServiceResult<Itinerary>> AddOrUpdateItineraryAsync(ItineraryDTO itineraryDto)
         {
-            return await _service.AddItinerary(model);
-        }
-        [HttpGet]
-        [Route("GenerateItineraryAsync")]
-        public async Task<string> GenerateItineraryAsync()
-        {
-            return await _service.GenerateItineraryAsync(1);
+            return await _service.AddOrUpdateItineraryAsync(itineraryDto);
         }
 
 
