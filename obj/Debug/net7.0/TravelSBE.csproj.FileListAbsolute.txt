@@ -133,3 +133,4 @@ C:\Users\winko\source\repos\Dicoi12\TravelSBE\bin\Debug\net7.0\out\appsettings.j
 C:\Users\winko\source\repos\Dicoi12\TravelSBE\bin\Debug\net7.0\out\TravelsBE.deps.json
 C:\Users\winko\source\repos\Dicoi12\TravelSBE\bin\Debug\net7.0\out\TravelsBE.runtimeconfig.json
 C:\Users\winko\source\repos\Dicoi12\TravelSBE\bin\Debug\net7.0\out\TravelsBE.staticwebassets.endpoints.json
+C:\Users\winko\source\repos\Dicoi12\TravelSBE\obj\Debug\net7.0\staticwebassets.upToDateCheck.txt

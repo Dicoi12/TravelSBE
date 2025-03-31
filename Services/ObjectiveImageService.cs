@@ -80,13 +80,13 @@ public class ObjectiveImageService : IObjectiveImageService
     }
 
 
-    public async Task<ServiceResult<bool>> DeleteImageAsync(int imageId)
+    public async Task<ServiceResult<bool>> DeleteImageAsync(Guid imageId)
     {
         var result = new ServiceResult<bool>();
 
         try
         {
-            var image = await _context.ObjectiveImages.FindAsync(imageId);
+            var image = await _context.ObjectiveImages.Where(x=>x.FilePath.Contains(imageId.ToString())).FirstOrDefaultAsync();
             if (image == null)
             {
                 result.ValidationMessage = "Image not found.";
