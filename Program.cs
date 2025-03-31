@@ -8,6 +8,7 @@ using TravelSBE.Mapper;
 using TravelSBE.Controllers;
 using TravelsBE.Services;
 using TravelsBE.Services.Interfaces;
+using Microsoft.Extensions.FileProviders;
 
 namespace TravelSBE
 {
@@ -44,6 +45,7 @@ namespace TravelSBE
                     listenOptions.UseHttps();
                 });
                 options.ListenAnyIP(5094); // HTTP
+                options.ListenAnyIP(5001, listenOptions => listenOptions.UseHttps());
             });
 
             builder.Services.Configure<FormOptions>(options => {
@@ -101,7 +103,13 @@ namespace TravelSBE
             //app.UseSpaStaticFiles();
             app.UseStaticFiles();
 
-
+            app.UseFileServer(new FileServerOptions
+            {
+                FileProvider = new PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "images")),
+                RequestPath = "",
+                EnableDirectoryBrowsing = true
+            });
             app.UseAuthorization();
             app.MapControllers();
             app.UseStaticFiles();
