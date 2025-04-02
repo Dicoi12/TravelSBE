@@ -21,6 +21,7 @@ namespace TravelSBE.Models
         public string? Interval { get; set; }
         public string? Pret { get; set; }
         public int? Type { get; set; }
+        public int? Duration { get; set; }
         public ObjectiveType? ObjectiveType { get; set; }
         public List<ReviewModel> Reviews { get; set; } = new List<ReviewModel>();
     }

@@ -150,9 +150,49 @@ namespace TravelSBE.Services
         }
 
 
-        public Task<ServiceResult<List<ItineraryModel>>> GetByUserId(int userId)
+        public async Task<ServiceResult<List<ItineraryPageDTO>>> GetByUserId(int userId)
         {
-            throw new NotImplementedException();
+            var result = new ServiceResult<List<ItineraryPageDTO>>();
+            var itineraries = await _context.Itineraries
+                .Include(i => i.ItineraryDetails)
+                    .ThenInclude(i => i.Objective)
+                        .ThenInclude(o => o.Images)
+                .Include(i => i.ItineraryDetails)
+                    .ThenInclude(i => i.Event)
+                        .ThenInclude(e => e.Images)
+                .Where(i => i.IdUser == userId || i.IdUser == null)
+                .ToListAsync();
+
+            var itineraryPageDTOs = itineraries.Select(itinerary => new ItineraryPageDTO
+            {
+                Id = itinerary.Id,
+                Name = itinerary.Name,
+                Description = itinerary.Description,
+                ItineraryDetails = itinerary.ItineraryDetails.Select(detail => new ItineraryDetailModel
+                {
+                    Id = detail.Id,
+                    IdObjective = detail.IdObjective,
+                    Objective = detail.Objective != null ? new ObjectiveModel
+                    {
+                        Id = detail.Objective.Id,
+                        Name = detail.Objective.Name,
+                        Description = detail.Objective.Description,
+                        Images = ImageHelper.ConvertToImageUrls(detail.Objective.Images)
+                    } : null,
+                    IdEvent = detail.IdEvent,
+                    Event = detail.Event != null ? new EventModel
+                    {
+                        Id = detail.Event.Id,
+                        Name = detail.Event.Name,
+                        Description = detail.Event.Description,
+                        Images = ImageHelper.ConvertToImageUrls(detail.Event.Images)
+                    } : null,
+                    VisitOrder = detail.VisitOrder
+                }).ToArray()
+            }).ToList();
+
+            result.Result = itineraryPageDTOs;
+            return result;
         }
     }
 }

@@ -26,8 +26,17 @@ namespace TravelSBE.Controllers
         {
             return await _service.AddOrUpdateItineraryAsync(itineraryDto);
         }
-
-
+        [HttpGet("user/{userId}")]
+        public async Task<ServiceResult<List<ItineraryPageDTO>>> GetByUserId(int userId)
+        {
+            return await _service.GetByUserId(userId);
+        }
+        [HttpDelete("user/{id}")]
+        public async Task<ServiceResult<bool>> DeleteItineraryByUser(int id, int userId)
+        {
+            return await _service.DeleteItineraryByUser(id, userId);
+        }
+        
 
     }
 }

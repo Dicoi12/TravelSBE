@@ -1,5 +1,6 @@
 # Exclude bin and obj folders
 bin/
+
 obj/
 
 # Visual Studio specific files
