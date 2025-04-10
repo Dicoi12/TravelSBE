@@ -17,7 +17,7 @@ namespace TravelSBE.Entity
 
         [ForeignKey("Itinerary")]
         public int IdItinerary { get; set; }
-        public Itinerary Itinerary { get; set; }
+        public Itinerary? Itinerary { get; set; }
 
         // Un ItineraryDetail poate avea un obiectiv sau un eveniment
         [ForeignKey("Objective")]

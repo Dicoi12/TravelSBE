@@ -12,6 +12,9 @@ namespace TravelSBE.Models
         public int? IdEvent { get; set; }
         public EventModel? Event { get; set; }
         public int VisitOrder { get; set; }
+        public int IdItinerary { get; set; }
         public string[] Images { get; set; } = new string[0];
+        public string Name { get; set; }
+        public string? Descriere { get; set; }
     }
 }
