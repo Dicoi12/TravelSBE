@@ -12,6 +12,7 @@ namespace TravelSBE.Entity
         public int Id { get; set; }
         [Required]
         public string UserName { get; set; }
+        public Point Location { get; set; }
         public string? Email { get; set; }
         public string? Phone { get; set; }
         public UserRoleEnum Role { get; set; }

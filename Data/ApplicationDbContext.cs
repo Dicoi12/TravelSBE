@@ -30,6 +30,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Experience> Experiences { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
+        modelBuilder.HasPostgresExtension("postgis"); // <-- important!
         builder.Entity<User>()
             .HasIndex(u => u.UserName)
             .IsUnique();
@@ -66,6 +67,10 @@ public class ApplicationDbContext : DbContext
         builder.Entity<ObjectiveSchedule>()
             .Property(s => s.DayOfWeek)
             .HasConversion<string>();
+            modelBuilder.Entity<User>().Property(u => u.Location).HasColumnType("geography (point)");
+            modelBuilder.Entity<Objective>().Property(o => o.Location).HasColumnType("geography (point)");
+            modelBuilder.Entity<Event>().Property(o => o.Location).HasColumnType("geography (point)");
+
     }
 
     protected void CustomMigrate()
