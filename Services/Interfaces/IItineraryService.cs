@@ -7,8 +7,10 @@ namespace TravelsBE.Services.Interfaces;
 
 public interface IItineraryService
 {
-    public Task<ServiceResult<List<ItineraryPageDTO>>> GetAllAsync();
-    public Task<ServiceResult<List<ItineraryPageDTO>>> GetByUserId(int userId);
-    public Task<ServiceResult<bool>> DeleteItineraryByUser(int id,int userId);
-    public Task<ServiceResult<Itinerary>> AddOrUpdateItineraryAsync(ItineraryDTO itineraryDto);
+    Task<ServiceResult<Itinerary>> AddItineraryAsync(ItineraryDTO itineraryDto);
+    Task<ServiceResult<Itinerary>> UpdateItineraryAsync(ItineraryDTO itineraryDto);
+    Task<ServiceResult<bool>> DeleteItineraryAsync(int id);
+    Task<ServiceResult<List<ItineraryPageDTO>>> GetAllAsync();
+    Task<ServiceResult<List<ItineraryPageDTO>>> GetByUserId(int userId);
 }
+

@@ -23,10 +23,16 @@ namespace TravelSBE.Controllers
             return await _service.GetAllAsync();
         }
 
-        [HttpPost("AddOrUpdateItineraryAsync")]
-        public async Task<ServiceResult<Itinerary>> AddOrUpdateItineraryAsync([FromQuery]ItineraryDTO itineraryDto)
+        [HttpPost("AddItineraryAsync")]
+        public async Task<ServiceResult<Itinerary>> AddItineraryAsync([FromBody] ItineraryDTO itineraryDto)
         {
-            return await _service.AddOrUpdateItineraryAsync(itineraryDto);
+            return await _service.AddItineraryAsync(itineraryDto);
+        }
+
+        [HttpPut("UpdateItineraryAsync")]
+        public async Task<ServiceResult<Itinerary>> UpdateItineraryAsync([FromBody] ItineraryDTO itineraryDto)
+        {
+            return await _service.UpdateItineraryAsync(itineraryDto);
         }
 
         [HttpGet("user/{userId}")]
@@ -35,10 +41,11 @@ namespace TravelSBE.Controllers
             return await _service.GetByUserId(userId);
         }
 
-        [HttpDelete("user/{id}")]
-        public async Task<ServiceResult<bool>> DeleteItineraryByUser(int id, int userId)
+        [HttpDelete("{id}")]
+        public async Task<ServiceResult<bool>> DeleteItineraryAsync(int id)
         {
-            return await _service.DeleteItineraryByUser(id, userId);
+            return await _service.DeleteItineraryAsync(id);
         }
     }
 }
+
