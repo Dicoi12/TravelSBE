@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using NetTopologySuite.Geometries;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using TravelSBE.Entity.Helper;
 
@@ -20,7 +21,7 @@ public class Event : BaseAuditEntity
     [ForeignKey("Objective")]
     public int? IdObjective { get; set; }
     public Objective? Objective { get; set; }
-    public Point Location { get; set; }
+    public Point? Location { get; set; }
     public string? WebSite { get; set; }
     public List<ObjectiveImage> Images { get; set; } = new List<ObjectiveImage>();
 }

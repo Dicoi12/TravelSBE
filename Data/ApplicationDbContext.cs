@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using TravelsBE.Entity;
 using TravelSBE.Entity;
 
@@ -15,6 +16,7 @@ public class ApplicationDbContext : DbContext
     {
         CustomMigrate();
     }
+   
 
     public DbSet<Objective> Objectives { get; set; }
     public DbSet<User> Users { get; set; }
@@ -30,7 +32,6 @@ public class ApplicationDbContext : DbContext
     public DbSet<Experience> Experiences { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        modelBuilder.HasPostgresExtension("postgis"); // <-- important!
         builder.Entity<User>()
             .HasIndex(u => u.UserName)
             .IsUnique();
@@ -67,9 +68,9 @@ public class ApplicationDbContext : DbContext
         builder.Entity<ObjectiveSchedule>()
             .Property(s => s.DayOfWeek)
             .HasConversion<string>();
-            modelBuilder.Entity<User>().Property(u => u.Location).HasColumnType("geography (point)");
-            modelBuilder.Entity<Objective>().Property(o => o.Location).HasColumnType("geography (point)");
-            modelBuilder.Entity<Event>().Property(o => o.Location).HasColumnType("geography (point)");
+            builder.Entity<User>().Property(u => u.Location).HasColumnType("geography (point)");
+            builder.Entity<Objective>().Property(o => o.Location).HasColumnType("geography (point)");
+            builder.Entity<Event>().Property(o => o.Location).HasColumnType("geography (point)");
 
     }
 

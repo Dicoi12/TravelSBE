@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using NetTopologySuite.Geometries;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 using TravelsBE.Entity;
@@ -23,7 +24,7 @@ namespace TravelSBE.Entity
         public string? Interval { get; set; }
         public string? Pret { get; set; }
         public int? Duration { get; set; }
-        public Point Location { get; set; }
+        public Point? Location { get; set; }
 
         public List<ObjectiveImage> Images { get; set; } = new List<ObjectiveImage>();
         public List<Review> Reviews { get; set; } = new List<Review>();

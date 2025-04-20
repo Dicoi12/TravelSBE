@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using NetTopologySuite.Geometries;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using TravelSBE.Entity.Helper;
 using TravelSBE.Enums;
@@ -12,7 +13,7 @@ namespace TravelSBE.Entity
         public int Id { get; set; }
         [Required]
         public string UserName { get; set; }
-        public Point Location { get; set; }
+        public Point? Location { get; set; }
         public string? Email { get; set; }
         public string? Phone { get; set; }
         public UserRoleEnum Role { get; set; }

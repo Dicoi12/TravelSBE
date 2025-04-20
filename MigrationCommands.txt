@@ -1,3 +1,3 @@
-dotnet ef migrations add DurationObjectives
+dotnet ef migrations add postigs
 dotnet ef database update
 dotnet ef migrations remove

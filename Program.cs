@@ -34,7 +34,7 @@ namespace TravelSBE
 
             builder.Services.AddControllers();
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),x=>x.UseNetTopologySuite()));
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
