@@ -13,6 +13,7 @@ using TravelSBE.Services.Interfaces;
 using TravelSBE.Utils;
 using System.Security.AccessControl;
 using TravelsBE.Models.Filters;
+using NetTopologySuite.Geometries;
 
 namespace TravelSBE.Services
 {
@@ -116,57 +117,68 @@ namespace TravelSBE.Services
         {
             var result = new ServiceResult<List<ObjectiveModel>>();
 
+            // Construim query-ul de tip IQueryable<Objective>
             var query = _context.Objectives
-                .Include(x => x.Images)
-                .Include(x => x.Reviews)
+                .Include(o => o.Images)
+                .Include(o => o.Reviews)
                 .AsQueryable();
 
+            // Filtrare după nume
             if (!string.IsNullOrEmpty(filter.Name))
             {
                 query = query.Where(o => EF.Functions.Like(o.Name.ToLower(), $"%{filter.Name.ToLower()}%"));
             }
 
-            if (filter.TypeId.HasValue && filter.TypeId!=0)
+            // Filtrare după tip
+            if (filter.TypeId.HasValue && filter.TypeId != 0)
             {
                 query = query.Where(o => o.Type == filter.TypeId);
             }
 
-            if (filter.MinRating.HasValue&&filter.MinRating!= 0)
+            // Filtrare după rating minim
+            if (filter.MinRating.HasValue && filter.MinRating != 0)
             {
-                query = query.Where(o => o.Reviews.Average(r => r.Raiting) >= filter.MinRating);
+                query = query.Where(o => o.Reviews.Any() && o.Reviews.Average(r => r.Raiting) >= filter.MinRating);
             }
 
-            var list = await query.ToListAsync();
-            var objectiveModels = _mapper.Map<List<ObjectiveModel>>(list);
-
-            foreach (var objective in objectiveModels)
+            // Filtrare și sortare după locație
+            if (filter.Latitude.HasValue && filter.Longitude.HasValue)
             {
-                var originalObjective = list.First(x => x.Id == objective.Id);
+                var userLocation = new Point(filter.Longitude.Value, filter.Latitude.Value) { SRID = 4326 };
 
-                objective.Images = originalObjective.Images
-                    .Select(img => $"{_baseUrl}{img.FilePath}")
-                    .ToList();
+                query = query
+                    .Where(o => o.Location != null) // Excludem obiectivele fără locație
+                    .OrderBy(o => o.Location.Distance(userLocation)); // Sortăm după distanță
 
-                if (filter.Latitude.HasValue && filter.Longitude.HasValue)
+                // Filtrare după distanța maximă (dacă este specificată)
+                if (filter.MaxDistance.HasValue)
                 {
-                    var distance = CalculateDistance(
-                        filter.Latitude.Value,
-                        filter.Longitude.Value,
-                        (double)objective.Latitude,
-                        (double)objective.Longitude);
-
-                    objective.Distance = distance;
-
-                    if (filter.MaxDistance.HasValue && distance > filter.MaxDistance.Value)
-                    {
-                        continue; // Exclude obiectivele care depășesc distanța maximă
-                    }
+                    query = query.Where(o => o.Location.Distance(userLocation) <= filter.MaxDistance.Value * 1000); // Convertim km în metri
                 }
             }
 
-            result.Result = objectiveModels.OrderBy(o => o.Distance).ToList();
+            // Executăm query-ul și mapăm rezultatele
+            var objectives = await query.ToListAsync();
+
+            var objectiveModels = objectives.Select(o => new ObjectiveModel
+            {
+                Id = o.Id,
+                Name = o.Name,
+                Description = o.Description,
+                Latitude = o.Location?.Y ?? 0, // Extragem latitudinea
+                Longitude = o.Location?.X ?? 0, // Extragem longitudinea
+                Distance = filter.Latitude.HasValue && filter.Longitude.HasValue && o.Location != null
+        ? Math.Round(o.Location.Distance(new Point(filter.Longitude.Value, filter.Latitude.Value) { SRID = 4326 }) / 1000, 1)
+        : 0,
+                City = o.City,
+                Images = o.Images.Select(img => $"{_baseUrl}{img.FilePath}").ToList(),
+                MedieReview = o.Reviews.Any() ? o.Reviews.Average(r => r.Raiting) : (double?)null
+            }).OrderBy(o => o.Distance).ToList(); // Sortăm rezultatele după distanță
+
+            result.Result = objectiveModels;
             return result;
         }
+
 
         public async Task<ServiceResult<ObjectiveModel>> CreateObjectiveAsync(ObjectiveModel objective)
         {
@@ -317,6 +329,25 @@ namespace TravelSBE.Services
                 result.Result = false;
                 result.ValidationMessage = ex.Message;
                 return result;
+            }
+        }
+        public async Task UpdateMissingLocationsAsync()
+        {
+            // Selectăm toate obiectivele care nu au locația setată, dar au latitudine și longitudine valide
+            var objectivesToUpdate = await _context.Objectives
+                .Where(o => o.Location == null && o.Latitude != 0 && o.Longitude != 0)
+                .ToListAsync();
+
+            foreach (var objective in objectivesToUpdate)
+            {
+                // Setăm proprietatea Location folosind latitudinea și longitudinea
+                objective.Location = new Point(objective.Longitude, objective.Latitude) { SRID = 4326 };
+            }
+
+            if (objectivesToUpdate.Any())
+            {
+                // Salvăm modificările în baza de date
+                await _context.SaveChangesAsync();
             }
         }
     }

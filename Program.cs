@@ -5,7 +5,6 @@ using Microsoft.OpenApi.Models;
 using TravelSBE.Services.Interfaces;
 using Microsoft.AspNetCore.Http.Features;
 using TravelSBE.Mapper;
-using TravelSBE.Controllers;
 using TravelsBE.Services;
 using TravelsBE.Services.Interfaces;
 using Microsoft.Extensions.FileProviders;
@@ -14,59 +13,31 @@ namespace TravelSBE
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Configure CORS to allow requests from localhost:3000
+            // Configure CORS to allow requests from localhost:5173
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowFrontend",
-                    builder => builder.WithOrigins("http://localhost:5173")
-                                      .AllowAnyMethod()
-                                      .AllowAnyHeader()
-                                      .AllowCredentials());
+                options.AddPolicy("AllowFrontend", policy =>
+                    policy.WithOrigins("http://localhost:5173")
+                          .AllowAnyMethod()
+                          .AllowAnyHeader()
+                          .AllowCredentials());
             });
-            //builder.Services.AddSpaStaticFiles(configuration =>
-            //{
-            //    configuration.RootPath = "ClientApp/dist";
-            //});
 
+            // Add controllers
             builder.Services.AddControllers();
+
+            // Configure Entity Framework with NetTopologySuite
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),x=>x.UseNetTopologySuite()));
+                options.UseNpgsql(
+                    builder.Configuration.GetConnectionString("DefaultConnection"),
+                    x => x.UseNetTopologySuite()));
 
+            // Add Swagger for API documentation
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-            builder.WebHost.ConfigureKestrel(options =>
-            {
-                options.ListenAnyIP(7100, listenOptions =>
-                {
-                    listenOptions.UseHttps();
-                });
-                options.ListenAnyIP(5094); // HTTP
-                options.ListenAnyIP(5001, listenOptions => listenOptions.UseHttps());
-            });
-
-            builder.Services.Configure<FormOptions>(options => {
-                options.MultipartBodyLengthLimit = 104857600; // 100 MB
-            });
-
-            builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
-
-            // Register your services here
-            builder.Services.AddScoped<IObjectiveService, ObjectiveService>();
-            builder.Services.AddScoped<IUserService, UserService>();
-            builder.Services.AddScoped<IEventService, EventService>();
-            builder.Services.AddScoped<IObjectiveImageService, ObjectiveImageService>();
-            builder.Services.AddScoped<IReviewService, ReviewService>();
-            builder.Services.AddScoped<IExperienceService, ExperienceService>();
-            builder.Services.AddScoped<IItineraryService, ItineraryService>();
-            builder.Services.AddScoped<IObjectiveTypeService, ObjectiveTypeService>();
-            builder.Services.AddHttpClient<ItineraryService>();
-
-
-
             builder.Services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo
@@ -77,45 +48,85 @@ namespace TravelSBE
                 });
             });
 
+            // Configure Kestrel server
+            builder.WebHost.ConfigureKestrel(options =>
+            {
+                options.ListenAnyIP(7100, listenOptions => listenOptions.UseHttps());
+                options.ListenAnyIP(5094); // HTTP
+                options.ListenAnyIP(5001, listenOptions => listenOptions.UseHttps());
+            });
+
+            // Configure form options for large file uploads
+            builder.Services.Configure<FormOptions>(options =>
+            {
+                options.MultipartBodyLengthLimit = 104857600; // 100 MB
+            });
+
+            // Add AutoMapper
+            builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
+
+            // Register application services
+            builder.Services.AddScoped<IObjectiveService, ObjectiveService>();
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IEventService, EventService>();
+            builder.Services.AddScoped<IObjectiveImageService, ObjectiveImageService>();
+            builder.Services.AddScoped<IReviewService, ReviewService>();
+            builder.Services.AddScoped<IExperienceService, ExperienceService>();
+            builder.Services.AddScoped<IItineraryService, ItineraryService>();
+            builder.Services.AddScoped<IObjectiveTypeService, ObjectiveTypeService>();
+            builder.Services.AddHttpClient<ItineraryService>();
+
             var app = builder.Build();
 
-            // Apply migrations at startup
+            // Apply migrations and update missing locations at startup
             using (var scope = app.Services.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                dbContext.Database.Migrate(); 
+                await dbContext.Database.MigrateAsync();
+
+                var objectiveService = scope.ServiceProvider.GetRequiredService<IObjectiveService>();
+                await objectiveService.UpdateMissingLocationsAsync();
             }
 
+            // Enable developer exception page in development
             if (app.Environment.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
 
+            // Enable Swagger
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "TravelSBE V1");
             });
 
+            // Enable HTTPS redirection
             app.UseHttpsRedirection();
 
+            // Enable CORS
             app.UseCors("AllowFrontend");
-            //app.UseSpaStaticFiles();
+
+            // Serve static files
             app.UseStaticFiles();
 
+            // Serve uploaded images from a specific directory
             app.UseFileServer(new FileServerOptions
             {
                 FileProvider = new PhysicalFileProvider(
-        Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "images")),
+                    Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "images")),
                 RequestPath = "",
                 EnableDirectoryBrowsing = true
             });
+
+            // Enable authorization
             app.UseAuthorization();
+
+            // Map controllers
             app.MapControllers();
-            app.UseStaticFiles();
 
-
-            app.Run();
+            // Run the application
+            await app.RunAsync();
         }
     }
 }

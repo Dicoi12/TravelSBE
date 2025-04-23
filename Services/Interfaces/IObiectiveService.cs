@@ -16,5 +16,6 @@ namespace TravelSBE.Services.Interfaces
         Task<ServiceResult<ObjectiveModel>> UpdateObjectiveAsync(Objective objective);
         Task<ServiceResult<bool>> DeleteObjectiveAsync(int id);
         ServiceResult<bool> InsertDefaultObjectives();
+        Task UpdateMissingLocationsAsync();
     }
 }
