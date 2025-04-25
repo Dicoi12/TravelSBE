@@ -33,25 +33,27 @@ namespace TravelSBE.Services
                 UpdatedAt = DateTime.UtcNow
             };
             _context.Itineraries.Add(itinerary);
-            await _context.SaveChangesAsync(); // Save to get the Id
+            await _context.SaveChangesAsync();
 
+            var savedItineraryId = itinerary.Id; // Ensure the saved itinerary ID is captured  
+
+                List<ItineraryDetail> list = new();
             foreach (var detailDto in itineraryDto.ItineraryDetails)
             {
                 var detail = new ItineraryDetail
                 {
-                    Id = 0,
                     Name = detailDto.Name,
                     Descriere = detailDto.Descriere,
                     IdObjective = detailDto.IdObjective,
                     IdEvent = detailDto.IdEvent,
                     VisitOrder = detailDto.VisitOrder,
-                    IdItinerary = itinerary.Id,
+                    IdItinerary = savedItineraryId, // Use the saved itinerary ID  
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
-                _context.ItineraryDetails.Add(detail);
+                list.Add(detail);
             }
-
+            _context.AddRange(list);
             try
             {
                 await _context.SaveChangesAsync();

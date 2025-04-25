@@ -16,7 +16,8 @@ namespace TravelSBE.Models
         public string? City { get; set; }
         public double? MedieReview { get; set; }
         public List<string> Images { get; set; } = new List<string>();
-        public double Distance { get; set; } = 0;
+        public double Distance { get; set; } 
+        public string FormattedDistance { get; set; } = string.Empty;
         public string? Website { get; set; }
         public string? Interval { get; set; }
         public string? Pret { get; set; }

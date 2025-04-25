@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,9 +13,11 @@ using TravelSBE.Data;
 namespace TravelSBE.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250425081653_NullableId")]
+    partial class NullableId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -159,8 +162,6 @@ namespace TravelSBE.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -189,8 +190,6 @@ namespace TravelSBE.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("IdEvent");
-
-                    b.HasIndex("IdItinerary");
 
                     b.HasIndex("IdObjective");
 
@@ -578,14 +577,15 @@ namespace TravelSBE.Migrations
 
             modelBuilder.Entity("TravelSBE.Entity.ItineraryDetail", b =>
                 {
+                    b.HasOne("TravelSBE.Entity.Itinerary", "Itinerary")
+                        .WithMany("ItineraryDetails")
+                        .HasForeignKey("Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("TravelSBE.Entity.Event", "Event")
                         .WithMany()
                         .HasForeignKey("IdEvent");
-
-                    b.HasOne("TravelSBE.Entity.Itinerary", "Itinerary")
-                        .WithMany("ItineraryDetails")
-                        .HasForeignKey("IdItinerary")
-                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("TravelSBE.Entity.Objective", "Objective")
                         .WithMany()

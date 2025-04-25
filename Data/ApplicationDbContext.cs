@@ -62,7 +62,8 @@ public class ApplicationDbContext : DbContext
         builder.Entity<Itinerary>()
                .HasMany(e => e.ItineraryDetails)
                .WithOne(e => e.Itinerary)
-               .HasForeignKey(e => e.Id);
+              .HasForeignKey(d => d.IdItinerary)
+         .OnDelete(DeleteBehavior.Cascade);
 
 
         builder.Entity<ObjectiveSchedule>()

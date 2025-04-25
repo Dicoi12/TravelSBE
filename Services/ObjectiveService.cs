@@ -117,47 +117,40 @@ namespace TravelSBE.Services
         {
             var result = new ServiceResult<List<ObjectiveModel>>();
 
-            // Construim query-ul de tip IQueryable<Objective>
             var query = _context.Objectives
                 .Include(o => o.Images)
                 .Include(o => o.Reviews)
                 .AsQueryable();
 
-            // Filtrare după nume
             if (!string.IsNullOrEmpty(filter.Name))
             {
                 query = query.Where(o => EF.Functions.Like(o.Name.ToLower(), $"%{filter.Name.ToLower()}%"));
             }
 
-            // Filtrare după tip
             if (filter.TypeId.HasValue && filter.TypeId != 0)
             {
                 query = query.Where(o => o.Type == filter.TypeId);
             }
 
-            // Filtrare după rating minim
             if (filter.MinRating.HasValue && filter.MinRating != 0)
             {
                 query = query.Where(o => o.Reviews.Any() && o.Reviews.Average(r => r.Raiting) >= filter.MinRating);
             }
 
-            // Filtrare și sortare după locație
             if (filter.Latitude.HasValue && filter.Longitude.HasValue)
             {
                 var userLocation = new Point(filter.Longitude.Value, filter.Latitude.Value) { SRID = 4326 };
 
                 query = query
-                    .Where(o => o.Location != null) // Excludem obiectivele fără locație
-                    .OrderBy(o => o.Location.Distance(userLocation)); // Sortăm după distanță
+                    .Where(o => o.Location != null) 
+                    .OrderBy(o => o.Location.Distance(userLocation)); 
 
-                // Filtrare după distanța maximă (dacă este specificată)
                 if (filter.MaxDistance.HasValue)
                 {
                     query = query.Where(o => o.Location.Distance(userLocation) <= filter.MaxDistance.Value * 1000); // Convertim km în metri
                 }
             }
 
-            // Executăm query-ul și mapăm rezultatele
             var objectives = await query.ToListAsync();
 
             var objectiveModels = objectives.Select(o => new ObjectiveModel
@@ -165,19 +158,33 @@ namespace TravelSBE.Services
                 Id = o.Id,
                 Name = o.Name,
                 Description = o.Description,
-                Latitude = o.Location?.Y ?? 0, // Extragem latitudinea
-                Longitude = o.Location?.X ?? 0, // Extragem longitudinea
-                Distance = filter.Latitude.HasValue && filter.Longitude.HasValue && o.Location != null
-        ? Math.Round(o.Location.Distance(new Point(filter.Longitude.Value, filter.Latitude.Value) { SRID = 4326 }) / 1000, 1)
-        : 0,
+                Latitude = o.Location?.Y ?? 0,
+                Longitude = o.Location?.X ?? 0, 
+                Distance = CalculateDistanceKm(filter.Latitude.Value, filter.Longitude.Value, o.Location.Y, o.Location.X),
+                FormattedDistance = filter.Latitude.HasValue && filter.Longitude.HasValue && o.Location != null
+                    ? FormatDistance(CalculateDistanceKm(filter.Latitude.Value, filter.Longitude.Value, o.Location.Y, o.Location.X))
+                    : "N/A",
                 City = o.City,
                 Images = o.Images.Select(img => $"{_baseUrl}{img.FilePath}").ToList(),
                 MedieReview = o.Reviews.Any() ? o.Reviews.Average(r => r.Raiting) : (double?)null
-            }).OrderBy(o => o.Distance).ToList(); // Sortăm rezultatele după distanță
+            }).OrderBy(o => o.Distance).ToList(); 
 
             result.Result = objectiveModels;
             return result;
         }
+
+        private string FormatDistance(double distanceInMeters)
+        {
+            if (distanceInMeters < 1000)
+            {
+                return $"{Math.Round(distanceInMeters)} metri";
+            }
+            else
+            {
+                return $"{Math.Round(distanceInMeters / 1000, 1)} km";
+            }
+        }
+
 
 
         public async Task<ServiceResult<ObjectiveModel>> CreateObjectiveAsync(ObjectiveModel objective)
@@ -231,18 +238,16 @@ namespace TravelSBE.Services
             result.Result = true;
             return result;
         }
-        private double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
+        double CalculateDistanceKm(double lat1, double lon1, double lat2, double lon2)
         {
-            const double R = 6371;
-            var lat = (lat2 - lat1) * (Math.PI / 180);
-            var lon = (lon2 - lon1) * (Math.PI / 180);
-
-            var a = Math.Sin(lat / 2) * Math.Sin(lat / 2) +
-                    Math.Cos(lat1 * (Math.PI / 180)) * Math.Cos(lat2 * (Math.PI / 180)) *
-                    Math.Sin(lon / 2) * Math.Sin(lon / 2);
-
+            var R = 6371.0; // raza Pământului în km
+            var dLat = (lat2 - lat1) * Math.PI / 180;
+            var dLon = (lon2 - lon1) * Math.PI / 180;
+            var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                    Math.Cos(lat1 * Math.PI / 180) * Math.Cos(lat2 * Math.PI / 180) *
+                    Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
             var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-            return R * c; // Distance in km 
+            return R * c;
         }
         private async Task<string> GenerateObjectiveDetailsAsync(string name, string city)
         {
