@@ -267,5 +267,60 @@ namespace TravelSBE.Services
             result.Result = itineraryPageDTOs;
             return result;
         }
+        public async Task<ServiceResult<ItineraryPageDTO>> GetByIdAsync(int id)
+        {
+            var result = new ServiceResult<ItineraryPageDTO>();
+
+            var itinerary = await _context.Itineraries
+                .Include(i => i.ItineraryDetails)
+                    .ThenInclude(i => i.Objective)
+                        .ThenInclude(o => o.Images)
+                .Include(i => i.ItineraryDetails)
+                    .ThenInclude(i => i.Event)
+                        .ThenInclude(e => e.Images)
+                .FirstOrDefaultAsync(i => i.Id == id);
+
+            if (itinerary == null)
+            {
+                result.ValidationMessage = "Itinerary not found";
+                result.IsSuccessful = false;
+                return result;
+            }
+
+            var itineraryPageDTO = new ItineraryPageDTO
+            {
+                Id = itinerary.Id,
+                Name = itinerary.Name,
+                Description = itinerary.Description,
+                ItineraryDetails = itinerary.ItineraryDetails.Select(detail => new ItineraryDetailModel
+                {
+                    Id = detail.Id,
+                    Name = detail.Name,
+                    Descriere = detail.Descriere,
+                    IdObjective = detail.IdObjective,
+                    Objective = detail.Objective != null ? new ObjectiveModel
+                    {
+                        Id = detail.Objective.Id,
+                        Name = detail.Objective.Name,
+                        Description = detail.Objective.Description,
+                        Images = ImageHelper.ConvertToImageUrls(detail.Objective.Images)
+                    } : null,
+                    IdEvent = detail.IdEvent,
+                    Event = detail.Event != null ? new EventModel
+                    {
+                        Id = detail.Event.Id,
+                        Name = detail.Event.Name,
+                        Description = detail.Event.Description,
+                        Images = ImageHelper.ConvertToImageUrls(detail.Event.Images)
+                    } : null,
+                    VisitOrder = detail.VisitOrder
+                }).ToArray()
+            };
+
+            result.Result = itineraryPageDTO;
+            result.IsSuccessful = true;
+            return result;
+        }
+
     }
 }

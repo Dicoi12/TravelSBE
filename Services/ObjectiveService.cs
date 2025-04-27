@@ -39,6 +39,7 @@ namespace TravelSBE.Services
             var result = new ServiceResult<List<ObjectiveModel>>();
 
             var query = _context.Objectives
+                .AsNoTracking()
                 .Include(x=>x.ObjectiveType)
                 .Include(x => x.Images)
                 .Include(x => x.Reviews);
@@ -82,6 +83,8 @@ namespace TravelSBE.Services
             var result = new ServiceResult<ObjectiveModel>();
 
             var item = await _context.Objectives
+                                .AsNoTracking()
+
                 .Include(x=>x.ObjectiveType)
                 .Include(x => x.Images)
                 .Include(x=>x.Reviews)
@@ -120,6 +123,7 @@ namespace TravelSBE.Services
             var query = _context.Objectives
                 .Include(o => o.Images)
                 .Include(o => o.Reviews)
+                .AsNoTracking()
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(filter.Name))
@@ -151,7 +155,7 @@ namespace TravelSBE.Services
                 }
             }
 
-            var objectives = await query.ToListAsync();
+            var objectives = await query.AsNoTracking().ToListAsync();
 
             var objectiveModels = objectives.Select(o => new ObjectiveModel
             {

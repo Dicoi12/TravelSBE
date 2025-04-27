@@ -27,7 +27,8 @@ namespace TravelSBE.Services
         {
             var result = new ServiceResult<List<EventModel>>();
 
-            var query = _context.Events.Include(x => x.Images);
+            var query = _context.Events.AsNoTracking()
+.Include(x => x.Images);
 
 
             var list = await query.ToListAsync();

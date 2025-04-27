@@ -12,5 +12,6 @@ public interface IItineraryService
     Task<ServiceResult<bool>> DeleteItineraryAsync(int id);
     Task<ServiceResult<List<ItineraryPageDTO>>> GetAllAsync();
     Task<ServiceResult<List<ItineraryPageDTO>>> GetByUserId(int userId);
+    Task<ServiceResult<ItineraryPageDTO>> GetByIdAsync(int id);
 }
 
