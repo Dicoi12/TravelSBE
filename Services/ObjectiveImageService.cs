@@ -80,34 +80,47 @@ public class ObjectiveImageService : IObjectiveImageService
     }
 
 
-    public async Task<ServiceResult<bool>> DeleteImageAsync(Guid imageId)
+    public async Task<ServiceResult<bool>> DeleteImageAsync(string imageUrl)
     {
         var result = new ServiceResult<bool>();
 
         try
         {
-            var image = await _context.ObjectiveImages.Where(x=>x.FilePath.Contains(imageId.ToString())).FirstOrDefaultAsync();
+            // Extract the file name from the URL
+            var fileName = Path.GetFileName(new Uri(imageUrl).LocalPath);
+
+            // Find the image in the database using the file name
+            var image = await _context.ObjectiveImages
+                .FirstOrDefaultAsync(x => x.FilePath.EndsWith(fileName));
+
             if (image == null)
             {
                 result.ValidationMessage = "Image not found.";
                 return result;
             }
 
+            // Construct the full file path
             var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", image.FilePath.TrimStart('/'));
+
+            // Delete the file from the disk if it exists
             if (File.Exists(filePath))
                 File.Delete(filePath);
 
+            // Remove the image record from the database
             _context.ObjectiveImages.Remove(image);
             await _context.SaveChangesAsync();
 
             result.Result = true;
+            result.IsSuccessful = true;
         }
         catch (Exception ex)
         {
             result.ValidationMessage = $"Error deleting image: {ex.Message}";
+            result.IsSuccessful = false;
         }
 
         return result;
     }
+
 
 }

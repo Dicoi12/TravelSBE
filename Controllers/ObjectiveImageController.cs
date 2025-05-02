@@ -34,13 +34,10 @@ public class ObjectiveImageController : ControllerBase
     }
 
     // DELETE: api/ObjectiveImage/delete/{imageId}
-    [HttpDelete("delete/{imageId}")]
-    public async Task<IActionResult> DeleteImage(Guid imageId)
+    [HttpDelete("delete")]
+    public async Task<ServiceResult<bool>> DeleteImageAsync([FromQuery]string imageUrl)
     {
-        var result = await _imageService.DeleteImageAsync(imageId);
-        if (!result.IsSuccessful)
-            return BadRequest(result.ValidationMessage);
-
-        return Ok("Image deleted successfully.");
+        var result = await _imageService.DeleteImageAsync(imageUrl);
+        return result;
     }
 }

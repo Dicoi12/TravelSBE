@@ -53,7 +53,8 @@ namespace TravelsBE.Services
                 result.IsSuccessful = false;
                 return result;
             }
-
+            itineraryDetailDto.Objective = null;
+            itineraryDetailDto.Event = null;
             detail.Name = itineraryDetailDto.Name;
             detail.Descriere = itineraryDetailDto.Descriere;
             detail.IdObjective = itineraryDetailDto.IdObjective;

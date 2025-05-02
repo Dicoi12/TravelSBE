@@ -8,5 +8,5 @@ public interface IObjectiveImageService
 {
     Task<List<ObjectiveImage>> GetImagesByObjectiveIdAsync(int objectiveId);
     Task<ServiceResult<int>> UploadImageAsync(IFormFile imageFile, int? objectiveId, int? eventId = null, int? idExperience = null, int? idItinerary = null);
-    Task<ServiceResult<bool>> DeleteImageAsync(Guid imageId);
+    Task<ServiceResult<bool>> DeleteImageAsync(string imageUrl);
 }

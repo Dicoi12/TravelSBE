@@ -40,37 +40,30 @@ namespace TravelSBE.Services
 
             var query = _context.Objectives
                 .AsNoTracking()
-                .Include(x=>x.ObjectiveType)
+                .Include(x => x.ObjectiveType)
                 .Include(x => x.Images)
-                .Include(x => x.Reviews);
-
-            var list = await query.ToListAsync();
+                .Include(x => x.Reviews)
+                .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                list = list.Where(x => x.Name.ToLower().Contains(search.ToLower())).ToList();
+                query = query.Where(x => x.Name.ToLower().Contains(search.ToLower()));
             }
 
+            var list = await query.ToListAsync();
             var objectiveModels = _mapper.Map<List<ObjectiveModel>>(list);
 
             foreach (var model in objectiveModels)
             {
                 var originalObjective = list.First(x => x.Id == model.Id);
 
-                // Set image URLs
                 model.Images = originalObjective.Images
                     .Select(img => $"{_baseUrl}{img.FilePath}")
                     .ToList();
 
-                // Compute the average review rating
-                if (originalObjective.Reviews.Any())
-                {
-                    model.MedieReview = (int)Math.Round(originalObjective.Reviews.Average(r => r.Raiting));
-                }
-                else
-                {
-                    model.MedieReview = null; // No reviews, set to null or 0 if preferred
-                }
+                model.MedieReview = originalObjective.Reviews.Any() 
+                    ? (int)Math.Round(originalObjective.Reviews.Average(r => r.Raiting))
+                    : null;
             }
 
             result.Result = objectiveModels;

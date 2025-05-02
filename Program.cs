@@ -38,15 +38,15 @@ namespace TravelSBE
 
             // Add Swagger for API documentation
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo
-                {
-                    Version = "v1",
-                    Title = "TravelSBE API",
-                    Description = "An ASP.NET Core Web API for managing travel objectives"
-                });
-            });
+            //builder.Services.AddSwaggerGen(c =>
+            //{
+            //    c.SwaggerDoc("v1", new OpenApiInfo
+            //    {
+            //        Version = "v1",
+            //        Title = "TravelSBE API",
+            //        Description = "An ASP.NET Core Web API for managing travel objectives"
+            //    });
+            //});
 
             // Configure Kestrel server
             builder.WebHost.ConfigureKestrel(options =>
@@ -74,6 +74,7 @@ namespace TravelSBE
             builder.Services.AddScoped<IExperienceService, ExperienceService>();
             builder.Services.AddScoped<IItineraryService, ItineraryService>();
             builder.Services.AddScoped<IObjectiveTypeService, ObjectiveTypeService>();
+            builder.Services.AddScoped<IItineraryDetailService, ItineraryDetailService>();
             builder.Services.AddHttpClient<ItineraryService>();
 
             var app = builder.Build();
@@ -83,9 +84,6 @@ namespace TravelSBE
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 await dbContext.Database.MigrateAsync();
-
-                var objectiveService = scope.ServiceProvider.GetRequiredService<IObjectiveService>();
-                await objectiveService.UpdateMissingLocationsAsync();
             }
 
             // Enable developer exception page in development
@@ -95,11 +93,11 @@ namespace TravelSBE
             }
 
             // Enable Swagger
-            app.UseSwagger();
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "TravelSBE V1");
-            });
+            //app.UseSwagger();
+            //app.UseSwaggerUI(c =>
+            //{
+            //    c.SwaggerEndpoint("/swagger/v1/swagger.json", "TravelSBE V1");
+            //});
 
             // Enable HTTPS redirection
             app.UseHttpsRedirection();
@@ -116,7 +114,7 @@ namespace TravelSBE
                 FileProvider = new PhysicalFileProvider(
                     Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "images")),
                 RequestPath = "",
-                EnableDirectoryBrowsing = true
+                EnableDirectoryBrowsing = false
             });
 
             // Enable authorization
