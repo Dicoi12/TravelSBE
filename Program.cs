@@ -75,6 +75,7 @@ namespace TravelSBE
             builder.Services.AddScoped<IItineraryService, ItineraryService>();
             builder.Services.AddScoped<IObjectiveTypeService, ObjectiveTypeService>();
             builder.Services.AddScoped<IItineraryDetailService, ItineraryDetailService>();
+            builder.Services.AddScoped<IMLService, MLService>();
             builder.Services.AddHttpClient<ItineraryService>();
 
             var app = builder.Build();
@@ -84,6 +85,13 @@ namespace TravelSBE
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 await dbContext.Database.MigrateAsync();
+
+                // Antrenăm modelul de ML la pornire
+                var mlService = scope.ServiceProvider.GetRequiredService<IMLService>();
+                await mlService.TrainModelAsync();
+
+                var objectiveService = scope.ServiceProvider.GetRequiredService<IObjectiveService>();
+                await objectiveService.UpdateMissingLocationsAsync();
             }
 
             // Enable developer exception page in development

@@ -25,6 +25,7 @@ namespace TravelSBE.Entity
         public string? Pret { get; set; }
         public int? Duration { get; set; }
         public Point? Location { get; set; }
+        public int? ClusterId { get; set; }
 
         public List<ObjectiveImage> Images { get; set; } = new List<ObjectiveImage>();
         public List<Review> Reviews { get; set; } = new List<Review>();
