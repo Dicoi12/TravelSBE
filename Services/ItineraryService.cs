@@ -303,6 +303,8 @@ namespace TravelSBE.Services
                         Id = detail.Objective.Id,
                         Name = detail.Objective.Name,
                         Description = detail.Objective.Description,
+                        Latitude=detail.Objective.Latitude,
+                        Longitude=detail.Objective.Longitude,
                         Images = ImageHelper.ConvertToImageUrls(detail.Objective.Images)
                     } : null,
                     IdEvent = detail.IdEvent,

@@ -6,6 +6,5 @@ public class ObjectiveFeatures
     public float TypeId { get; set; }
     public float AverageRating { get; set; }
     public float Price { get; set; }
-    public float Season { get; set; }
     public int ClusterId { get; set; }
 }

@@ -46,7 +46,8 @@ public class ApplicationDbContext : DbContext
         builder.Entity<Objective>()
                .HasMany(e => e.Reviews)
                .WithOne(e => e.Objective)
-               .HasForeignKey(e => e.Id);
+               .HasForeignKey(e => e.IdObjective)
+               .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<Event>()
                .HasMany(e => e.Images)

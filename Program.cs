@@ -8,6 +8,7 @@ using TravelSBE.Mapper;
 using TravelsBE.Services;
 using TravelsBE.Services.Interfaces;
 using Microsoft.Extensions.FileProviders;
+using TravelSBE.Entity;
 
 namespace TravelSBE
 {
@@ -92,6 +93,38 @@ namespace TravelSBE
 
                 var objectiveService = scope.ServiceProvider.GetRequiredService<IObjectiveService>();
                 await objectiveService.UpdateMissingLocationsAsync();
+
+                // Adăugăm recenzii aleatorii pentru toți utilizatorii și obiectivele
+                var users = await dbContext.Users.ToListAsync();
+                var objectives = await dbContext.Objectives.ToListAsync();
+                var random = new Random();
+
+                foreach (var user in users)
+                {
+                    foreach (var objective in objectives)
+                    {
+                        // Verificăm dacă există deja o recenzie pentru această pereche user-objective
+                        var existingReview = await dbContext.Reviews
+                            .FirstOrDefaultAsync(r => r.IdUser == user.Id && r.IdObjective == objective.Id);
+
+                        if (existingReview == null)
+                        {
+                            var review = new Review
+                            {
+                                IdUser = user.Id,
+                                IdObjective = objective.Id,
+                                Raiting = random.Next(2, 6), // Generează un număr între 2 și 5
+                                DatePosted = DateTime.UtcNow,
+                                CreatedAt = DateTime.UtcNow,
+                                UpdatedAt = DateTime.UtcNow
+                            };
+
+                            dbContext.Reviews.Add(review);
+                        }
+                    }
+                }
+
+                await dbContext.SaveChangesAsync();
             }
 
             // Enable developer exception page in development

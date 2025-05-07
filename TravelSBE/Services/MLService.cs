@@ -34,47 +34,36 @@ namespace TravelSBE.Services
         {
             try
             {
-                // Obținem toate obiectivele din baza de date
                 var objectives = await _context.Objectives
                     .Include(o => o.Reviews)
                     .Include(o => o.ObjectiveType)
                     .ToListAsync();
 
-                // Convertim obiectivele în formatul necesar pentru ML
+
                 var trainingData = objectives.Select(o => new ObjectiveFeatures
                 {
                     ObjectiveId = o.Id,
-                    Latitude = (float)o.Latitude,
-                    Longitude = (float)o.Longitude,
                     TypeId = (float)(o.Type ?? 0),
                     AverageRating = (float)(o.Reviews.Any() ? o.Reviews.Average(r => r.Raiting) : 0),
                     Price = ParsePrice(o.Pret),
-                    Season = GetSeason(o.Interval),
                     ClusterId = o.ClusterId ?? 0
                 }).ToList();
 
-
-                // Creăm pipeline-ul de antrenare
                 var pipeline = _mlContext.Transforms.Concatenate(
                         "Features",
-                        nameof(ObjectiveFeatures.Latitude),
-                        nameof(ObjectiveFeatures.Longitude),
                         nameof(ObjectiveFeatures.TypeId),
                         nameof(ObjectiveFeatures.AverageRating),
-                        nameof(ObjectiveFeatures.Price),
-                        nameof(ObjectiveFeatures.Season))
+                        nameof(ObjectiveFeatures.Price))
+                    .Append(_mlContext.Transforms.NormalizeMinMax("Features"))
                     .Append(_mlContext.Clustering.Trainers.KMeans(
-                        numberOfClusters: 10,
+                      numberOfClusters: Math.Max(2, Math.Min(3, objectives.Count / 2)),
                         featureColumnName: "Features"));
 
-                // Antrenăm modelul
                 var dataView = _mlContext.Data.LoadFromEnumerable(trainingData);
                 _model = pipeline.Fit(dataView);
 
-                // Creăm engine-ul de predicție
                 _predictionEngine = _mlContext.Model.CreatePredictionEngine<ObjectiveFeatures, ClusterPrediction>(_model);
 
-                // Actualizăm clusterele în baza de date
                 foreach (var objective in objectives)
                 {
                     var features = trainingData.First(f => f.ObjectiveId == objective.Id);
@@ -86,8 +75,7 @@ namespace TravelSBE.Services
             }
             catch(Exception ex)
             {
-                // Log the exception or handle it as needed
-                Console.WriteLine($"Error during model training: {ex.Message}");
+                throw;
             }
         }
 
@@ -119,20 +107,6 @@ namespace TravelSBE.Services
 
             return similarObjectives;
         }
-
-        private float GetSeason(string? interval)
-        {
-            if (string.IsNullOrEmpty(interval))
-                return 0;
-
-            var lowerInterval = interval.ToLower();
-            if (lowerInterval.Contains("vara")) return 1;
-            if (lowerInterval.Contains("toamna")) return 2;
-            if (lowerInterval.Contains("iarna")) return 3;
-            if (lowerInterval.Contains("primavara")) return 4;
-            return 0;
-        }
-
 
         private float ParsePrice(string? pret)
         {
