@@ -21,6 +21,10 @@ namespace TravelSBE.Utils
         {
             return images.Select(img => $"{_baseUrl}{img.FilePath}").ToList();
         }
+        public static string GetFirstImageURL(List<ObjectiveImage> images)
+        {
+            return images.Select(img=> $"{_baseUrl}{img.FilePath}").First();
+        }
     }
 }
 

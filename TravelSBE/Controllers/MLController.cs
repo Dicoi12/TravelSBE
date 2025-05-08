@@ -30,7 +30,7 @@ namespace TravelSBE.Controllers
         }
 
         [HttpGet("recommendations/{objectiveId}")]
-        public async Task<IActionResult> GetRecommendations(int objectiveId, [FromQuery] int count = 5)
+        public async Task<IActionResult> GetRecommendations(int objectiveId, [FromQuery] int count = 4)
         {
             try
             {

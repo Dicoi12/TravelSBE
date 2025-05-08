@@ -9,15 +9,17 @@ namespace TravelSBE.Entity
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
+
         [ForeignKey("User")]
         public int IdUser { get; set; }
         public User? User { get; set; }
+
         [ForeignKey("Objective")]
-        public int? IdObjective { get; set; }
+        public int IdObjective { get; set; }
         public Objective? Objective { get; set; }
+
         public int Raiting { get; set; }
         public string? Comment { get; set; }
-        public DateTime? DatePosted { get; set; }
-
+        public DateTime DatePosted { get; set; } = DateTime.UtcNow;
     }
 }

@@ -4,25 +4,27 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TravelSBE.Data;
 
 #nullable disable
 
-namespace TravelSBE.Migrations
+namespace TravelsBE.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241209143737_ObjectiveType")]
-    partial class ObjectiveType
+    [Migration("20250508105653_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.5")
+                .HasAnnotation("ProductVersion", "9.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "postgis");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("TravelSBE.Entity.Answer", b =>
@@ -93,6 +95,9 @@ namespace TravelSBE.Migrations
                     b.Property<double?>("Latitude")
                         .HasColumnType("double precision");
 
+                    b.Property<Point>("Location")
+                        .HasColumnType("geography (point)");
+
                     b.Property<double?>("Longitude")
                         .HasColumnType("double precision");
 
@@ -105,6 +110,9 @@ namespace TravelSBE.Migrations
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("WebSite")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -123,6 +131,10 @@ namespace TravelSBE.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int?>("IdUser")
                         .HasColumnType("integer");
@@ -158,27 +170,18 @@ namespace TravelSBE.Migrations
                     b.Property<string>("Descriere")
                         .HasColumnType("text");
 
-                    b.Property<int?>("EventId")
-                        .HasColumnType("integer");
-
                     b.Property<int?>("IdEvent")
                         .HasColumnType("integer");
 
-                    b.Property<int>("IdItinerary")
+                    b.Property<int?>("IdItinerary")
                         .HasColumnType("integer");
 
                     b.Property<int?>("IdObjective")
                         .HasColumnType("integer");
 
-                    b.Property<int>("ItineraryId")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<int?>("ObjectiveId")
-                        .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -188,11 +191,11 @@ namespace TravelSBE.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EventId");
+                    b.HasIndex("IdEvent");
 
-                    b.HasIndex("ItineraryId");
+                    b.HasIndex("IdItinerary");
 
-                    b.HasIndex("ObjectiveId");
+                    b.HasIndex("IdObjective");
 
                     b.ToTable("ItineraryDetails");
                 });
@@ -208,14 +211,26 @@ namespace TravelSBE.Migrations
                     b.Property<string>("City")
                         .HasColumnType("text");
 
+                    b.Property<int?>("ClusterId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
+                    b.Property<int?>("Duration")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Interval")
+                        .HasColumnType("text");
+
                     b.Property<double>("Latitude")
                         .HasColumnType("double precision");
+
+                    b.Property<Point>("Location")
+                        .HasColumnType("geography (point)");
 
                     b.Property<double>("Longitude")
                         .HasColumnType("double precision");
@@ -224,11 +239,17 @@ namespace TravelSBE.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Pret")
+                        .HasColumnType("text");
+
                     b.Property<int?>("Type")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Website")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -255,7 +276,7 @@ namespace TravelSBE.Migrations
                     b.Property<int?>("IdEvent")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("IdItinerary")
+                    b.Property<int?>("IdExperienta")
                         .HasColumnType("integer");
 
                     b.Property<int?>("IdObjective")
@@ -272,7 +293,7 @@ namespace TravelSBE.Migrations
 
                     b.HasIndex("IdEvent");
 
-                    b.HasIndex("IdItinerary");
+                    b.HasIndex("IdExperienta");
 
                     b.HasIndex("IdObjective");
 
@@ -334,10 +355,10 @@ namespace TravelSBE.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("DatePosted")
+                    b.Property<DateTime>("DatePosted")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int?>("IdObjective")
+                    b.Property<int>("IdObjective")
                         .HasColumnType("integer");
 
                     b.Property<int>("IdUser")
@@ -376,6 +397,9 @@ namespace TravelSBE.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Point>("Location")
+                        .HasColumnType("geography (point)");
+
                     b.Property<string>("Phone")
                         .HasColumnType("text");
 
@@ -405,6 +429,92 @@ namespace TravelSBE.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("TravelsBE.Entity.Experience", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Country")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("boolean");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("LocationName")
+                        .HasColumnType("text");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int?>("Rating")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Experiences");
+                });
+
+            modelBuilder.Entity("TravelsBE.Entity.ObjectiveSchedule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<TimeSpan>("CloseTime")
+                        .HasColumnType("interval");
+
+                    b.Property<string>("DayOfWeek")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("EntryPrice")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("ObjectiveId")
+                        .HasColumnType("integer");
+
+                    b.Property<TimeSpan>("OpenTime")
+                        .HasColumnType("interval");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ObjectiveId");
+
+                    b.ToTable("ObjectiveSchedules");
                 });
 
             modelBuilder.Entity("TravelsBE.Entity.ObjectiveType", b =>
@@ -477,17 +587,16 @@ namespace TravelSBE.Migrations
                 {
                     b.HasOne("TravelSBE.Entity.Event", "Event")
                         .WithMany()
-                        .HasForeignKey("EventId");
+                        .HasForeignKey("IdEvent");
 
                     b.HasOne("TravelSBE.Entity.Itinerary", "Itinerary")
-                        .WithMany()
-                        .HasForeignKey("ItineraryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithMany("ItineraryDetails")
+                        .HasForeignKey("IdItinerary")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("TravelSBE.Entity.Objective", "Objective")
                         .WithMany()
-                        .HasForeignKey("ObjectiveId");
+                        .HasForeignKey("IdObjective");
 
                     b.Navigation("Event");
 
@@ -511,9 +620,10 @@ namespace TravelSBE.Migrations
                         .WithMany("Images")
                         .HasForeignKey("IdEvent");
 
-                    b.HasOne("TravelSBE.Entity.Itinerary", "Itinerary")
+                    b.HasOne("TravelsBE.Entity.Experience", "Experience")
                         .WithMany("Images")
-                        .HasForeignKey("IdItinerary");
+                        .HasForeignKey("IdExperienta")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("TravelSBE.Entity.Objective", "Objective")
                         .WithMany("Images")
@@ -521,7 +631,7 @@ namespace TravelSBE.Migrations
 
                     b.Navigation("Event");
 
-                    b.Navigation("Itinerary");
+                    b.Navigation("Experience");
 
                     b.Navigation("Objective");
                 });
@@ -552,11 +662,13 @@ namespace TravelSBE.Migrations
             modelBuilder.Entity("TravelSBE.Entity.Review", b =>
                 {
                     b.HasOne("TravelSBE.Entity.Objective", "Objective")
-                        .WithMany()
-                        .HasForeignKey("IdObjective");
+                        .WithMany("Reviews")
+                        .HasForeignKey("IdObjective")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("TravelSBE.Entity.User", "User")
-                        .WithMany()
+                        .WithMany("Reviews")
                         .HasForeignKey("IdUser")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -566,6 +678,17 @@ namespace TravelSBE.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("TravelsBE.Entity.ObjectiveSchedule", b =>
+                {
+                    b.HasOne("TravelSBE.Entity.Objective", "Objective")
+                        .WithMany()
+                        .HasForeignKey("ObjectiveId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Objective");
+                });
+
             modelBuilder.Entity("TravelSBE.Entity.Event", b =>
                 {
                     b.Navigation("Images");
@@ -573,10 +696,22 @@ namespace TravelSBE.Migrations
 
             modelBuilder.Entity("TravelSBE.Entity.Itinerary", b =>
                 {
-                    b.Navigation("Images");
+                    b.Navigation("ItineraryDetails");
                 });
 
             modelBuilder.Entity("TravelSBE.Entity.Objective", b =>
+                {
+                    b.Navigation("Images");
+
+                    b.Navigation("Reviews");
+                });
+
+            modelBuilder.Entity("TravelSBE.Entity.User", b =>
+                {
+                    b.Navigation("Reviews");
+                });
+
+            modelBuilder.Entity("TravelsBE.Entity.Experience", b =>
                 {
                     b.Navigation("Images");
                 });

@@ -42,7 +42,7 @@ namespace TravelSBE.Services
                 .AsNoTracking()
                 .Include(x => x.ObjectiveType)
                 .Include(x => x.Images)
-                .Include(x => x.Reviews)
+                //.Include(x => x.Reviews)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -61,9 +61,9 @@ namespace TravelSBE.Services
                     .Select(img => $"{_baseUrl}{img.FilePath}")
                     .ToList();
 
-                model.MedieReview = originalObjective.Reviews.Any() 
-                    ? (int)Math.Round(originalObjective.Reviews.Average(r => r.Raiting))
-                    : null;
+                //model.MedieReview = originalObjective.Reviews.Any() 
+                //    ? (int)Math.Round(originalObjective.Reviews.Average(r => r.Raiting))
+                //    : null;
             }
 
             result.Result = objectiveModels;

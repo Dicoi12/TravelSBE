@@ -29,7 +29,7 @@ namespace TravelSBE.Services
             var review = new Review
             {
                 IdUser = reviewDto.IdUser,
-                IdObjective = reviewDto.IdObjective,
+                IdObjective = (int)reviewDto.IdObjective,
                 Raiting = reviewDto.Raiting,
                 Comment = reviewDto.Comment,
                 DatePosted = reviewDto.DatePosted ?? DateTime.UtcNow

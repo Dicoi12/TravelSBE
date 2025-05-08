@@ -9,7 +9,7 @@ using TravelSBE.Data;
 
 #nullable disable
 
-namespace TravelSBE.Migrations
+namespace TravelsBE.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     partial class ApplicationDbContextModelSnapshot : ModelSnapshot
@@ -352,10 +352,10 @@ namespace TravelSBE.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("DatePosted")
+                    b.Property<DateTime>("DatePosted")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int?>("IdObjective")
+                    b.Property<int>("IdObjective")
                         .HasColumnType("integer");
 
                     b.Property<int>("IdUser")
@@ -661,10 +661,11 @@ namespace TravelSBE.Migrations
                     b.HasOne("TravelSBE.Entity.Objective", "Objective")
                         .WithMany("Reviews")
                         .HasForeignKey("IdObjective")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("TravelSBE.Entity.User", "User")
-                        .WithMany()
+                        .WithMany("Reviews")
                         .HasForeignKey("IdUser")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -699,6 +700,11 @@ namespace TravelSBE.Migrations
                 {
                     b.Navigation("Images");
 
+                    b.Navigation("Reviews");
+                });
+
+            modelBuilder.Entity("TravelSBE.Entity.User", b =>
+                {
                     b.Navigation("Reviews");
                 });
 

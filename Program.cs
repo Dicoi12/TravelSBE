@@ -29,7 +29,11 @@ namespace TravelSBE
             });
 
             // Add controllers
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.MaxDepth = 32;
+                });
 
             // Configure Entity Framework with NetTopologySuite
             builder.Services.AddDbContext<ApplicationDbContext>(options =>

@@ -49,6 +49,7 @@ public class ApplicationDbContext : DbContext
                .HasForeignKey(e => e.IdObjective)
                .OnDelete(DeleteBehavior.Cascade);
 
+
         builder.Entity<Event>()
                .HasMany(e => e.Images)
                .WithOne(e => e.Event)
