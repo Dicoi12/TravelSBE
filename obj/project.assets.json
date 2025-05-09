@@ -3865,19 +3865,19 @@
   },
   "packageFolders": {
     "C:\\Users\\winko\\.nuget\\packages\\": {},
-    "D:\\vs4\\NuGetPackages": {}
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\winko\\source\\repos\\TravelSBE\\TravelsBE.csproj",
+      "projectUniqueName": "C:\\Users\\winko\\source\\repos\\Dicoi12\\TravelSBE\\TravelsBE.csproj",
       "projectName": "TravelsBE",
-      "projectPath": "C:\\Users\\winko\\source\\repos\\TravelSBE\\TravelsBE.csproj",
+      "projectPath": "C:\\Users\\winko\\source\\repos\\Dicoi12\\TravelSBE\\TravelsBE.csproj",
       "packagesPath": "C:\\Users\\winko\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\winko\\source\\repos\\TravelSBE\\obj\\",
+      "outputPath": "C:\\Users\\winko\\source\\repos\\Dicoi12\\TravelSBE\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
-        "D:\\vs4\\NuGetPackages"
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
         "C:\\Users\\winko\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -3907,7 +3907,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.100"
+      "SdkAnalysisLevel": "9.0.200"
     },
     "frameworks": {
       "net9.0": {
@@ -3969,7 +3969,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.101/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.203/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

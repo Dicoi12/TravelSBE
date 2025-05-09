@@ -90,45 +90,51 @@ namespace TravelSBE
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 await dbContext.Database.MigrateAsync();
-
-                // Antrenăm modelul de ML la pornire
-                var mlService = scope.ServiceProvider.GetRequiredService<IMLService>();
-                await mlService.TrainModelAsync();
-
-                var objectiveService = scope.ServiceProvider.GetRequiredService<IObjectiveService>();
-                await objectiveService.UpdateMissingLocationsAsync();
-
-                // Adăugăm recenzii aleatorii pentru toți utilizatorii și obiectivele
-                var users = await dbContext.Users.ToListAsync();
-                var objectives = await dbContext.Objectives.ToListAsync();
-                var random = new Random();
-
-                foreach (var user in users)
+                try
                 {
-                    foreach (var objective in objectives)
+                    // Antrenăm modelul de ML la pornire
+                    var mlService = scope.ServiceProvider.GetRequiredService<IMLService>();
+                    await mlService.TrainModelAsync();
+
+                    var objectiveService = scope.ServiceProvider.GetRequiredService<IObjectiveService>();
+                    await objectiveService.UpdateMissingLocationsAsync();
+
+                    // Adăugăm recenzii aleatorii pentru toți utilizatorii și obiectivele
+                    var users = await dbContext.Users.ToListAsync();
+                    var objectives = await dbContext.Objectives.ToListAsync();
+                    var random = new Random();
+
+                    foreach (var user in users)
                     {
-                        // Verificăm dacă există deja o recenzie pentru această pereche user-objective
-                        var existingReview = await dbContext.Reviews
-                            .FirstOrDefaultAsync(r => r.IdUser == user.Id && r.IdObjective == objective.Id);
-
-                        if (existingReview == null)
+                        foreach (var objective in objectives)
                         {
-                            var review = new Review
-                            {
-                                IdUser = user.Id,
-                                IdObjective = objective.Id,
-                                Raiting = random.Next(2, 6), // Generează un număr între 2 și 5
-                                DatePosted = DateTime.UtcNow,
-                                CreatedAt = DateTime.UtcNow,
-                                UpdatedAt = DateTime.UtcNow
-                            };
+                            // Verificăm dacă există deja o recenzie pentru această pereche user-objective
+                            var existingReview = await dbContext.Reviews
+                                .FirstOrDefaultAsync(r => r.IdUser == user.Id && r.IdObjective == objective.Id);
 
-                            dbContext.Reviews.Add(review);
+                            if (existingReview == null)
+                            {
+                                var review = new Review
+                                {
+                                    IdUser = user.Id,
+                                    IdObjective = objective.Id,
+                                    Raiting = random.Next(2, 6), // Generează un număr între 2 și 5
+                                    DatePosted = DateTime.UtcNow,
+                                    CreatedAt = DateTime.UtcNow,
+                                    UpdatedAt = DateTime.UtcNow
+                                };
+
+                                dbContext.Reviews.Add(review);
+                            }
                         }
                     }
-                }
 
-                await dbContext.SaveChangesAsync();
+                    await dbContext.SaveChangesAsync();
+                }
+                catch (Exception)
+                {
+                    /* Handle exceptions */
+                }
             }
 
             // Enable developer exception page in development
