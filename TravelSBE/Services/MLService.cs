@@ -14,25 +14,37 @@ namespace TravelSBE.Services
     {
         Task TrainModelAsync();
         Task<ServiceResult<List<RecommendedObjectiveDto>>> GetRecommendedObjectivesAsync(int objectiveId, int count = 4);
+        Task<ServiceResult<List<ObjectiveVisualizationDto>>> GetObjectivesForVisualizationAsync();
     }
 
     public class MLService : IMLService
     {
         private readonly ApplicationDbContext _context;
-        private readonly MLContext _mlContext;
-        private ITransformer _model;
-        private PredictionEngine<ObjectiveFeatures, ClusterPrediction> _predictionEngine;
         private readonly IConfiguration _configuration;
-        private const int K = 5; // mărim numărul de vecini
-        private const double DISTANCE_THRESHOLD = 0.5; // mărim distanța (în grade)
-        private const double SIMILARITY_THRESHOLD = 0.6; // relaxăm similaritatea
-        private const int MAX_CLUSTERS = 10; // numărul maxim de clustere dorit
+        private const int K = 5; 
+        private const int MAX_ITERATIONS = 100;
+        private readonly Point _referencePoint;
+
+        private class ClusteringPoint
+        {
+            public Objective Objective { get; set; }
+            public double X { get; set; }
+            public double Y { get; set; }
+        }
 
         public MLService(ApplicationDbContext context, IConfiguration configuration)
         {
             _context = context;
-            _mlContext = new MLContext();
             _configuration = configuration;
+            _referencePoint = new Point(26.1025, 44.4268) { SRID = 4326 };
+        }
+
+        private double CalculateDistanceFromReference(Point? location)
+        {
+            if (location == null)
+                return 0;
+
+            return location.Distance(_referencePoint) * 111000; 
         }
 
         public async Task TrainModelAsync()
@@ -40,204 +52,201 @@ namespace TravelSBE.Services
             try
             {
                 var objectives = await _context.Objectives
-                    .Include(o => o.Reviews)
                     .Include(o => o.ObjectiveType)
                     .ToListAsync();
 
-                // Resetăm toate clusterId-urile
-                foreach (var obj in objectives)
+                var points = objectives.Select(o => new ClusteringPoint
                 {
-                    obj.ClusterId = null;
-                }
+                    Objective = o,
+                    X = o.Location?.X ?? 0,  
+                    Y = o.Location?.Y ?? 0  
+                }).ToList();
 
-                int currentClusterId = 1;
-                var processedObjectives = new HashSet<int>();
-                var clusterCenters = new Dictionary<int, Point>();
+                var normalizedPoints = await NormalizePoints(points);
 
-                // Prima fază: creăm clusterele inițiale
-                foreach (var objective in objectives.Where(o => o.Location != null))
+                var clusters = ApplyKMeans(normalizedPoints);
+
+                for (int i = 0; i < objectives.Count; i++)
                 {
-                    if (processedObjectives.Contains(objective.Id))
-                        continue;
-
-                    var nearbyObjectives = await _context.Objectives
-                        .Where(o => o.Id != objective.Id && !processedObjectives.Contains(o.Id))
-                        .Where(o => o.Location != null)
-                        .Where(o => o.Location.Distance(objective.Location) <= DISTANCE_THRESHOLD)
-                        .Where(o => o.Type == objective.Type)
-                        .Select(o => new
-                        {
-                            Objective = o,
-                            Distance = o.Location.Distance(objective.Location)
-                        })
-                        .OrderBy(n => n.Distance)
-                        .Take(K * 2)
-                        .ToListAsync();
-
-                    var nearestNeighbors = nearbyObjectives
-                        .Select(n => new
-                        {
-                            n.Objective,
-                            n.Distance,
-                            Similarity = CalculatePriceSimilarity(
-                                ParsePrice(objective.Pret),
-                                ParsePrice(n.Objective.Pret))
-                        })
-                        .Where(n => n.Similarity >= SIMILARITY_THRESHOLD)
-                        .Take(K)
-                        .ToList();
-
-                    // Atribuim clusterId chiar dacă nu găsim vecini
-                    objective.ClusterId = currentClusterId;
-                    processedObjectives.Add(objective.Id);
-                    clusterCenters[currentClusterId] = objective.Location;
-
-                    if (nearestNeighbors.Any())
-                    {
-                        foreach (var neighbor in nearestNeighbors)
-                        {
-                            neighbor.Objective.ClusterId = currentClusterId;
-                            processedObjectives.Add(neighbor.Objective.Id);
-                        }
-                    }
-
-                    currentClusterId++;
-                }
-
-                // A doua fază: atribuim clustere pentru obiectivele rămase
-                foreach (var objective in objectives.Where(o => !processedObjectives.Contains(o.Id)))
-                {
-                    if (objective.Location == null)
-                    {
-                        // Pentru obiectivele fără locație, le atribuim un cluster nou
-                        objective.ClusterId = currentClusterId++;
-                        continue;
-                    }
-
-                    // Găsim cel mai apropiat cluster
-                    var nearestCluster = clusterCenters
-                        .OrderBy(c => c.Value.Distance(objective.Location))
-                        .FirstOrDefault();
-
-                    if (nearestCluster.Key != 0)
-                    {
-                        objective.ClusterId = nearestCluster.Key;
-                    }
-                    else
-                    {
-                        // Dacă nu găsim un cluster apropiat, creăm unul nou
-                        objective.ClusterId = currentClusterId;
-                        clusterCenters[currentClusterId] = objective.Location;
-                        currentClusterId++;
-                    }
-                    processedObjectives.Add(objective.Id);
-                }
-
-                // A treia fază: combinăm clusterele dacă sunt prea multe
-                if (clusterCenters.Count > MAX_CLUSTERS)
-                {
-                    var clustersToMerge = new List<(int cluster1, int cluster2)>();
-                    
-                    // Găsim clusterele care ar trebui combinate
-                    foreach (var cluster1 in clusterCenters)
-                    {
-                        foreach (var cluster2 in clusterCenters)
-                        {
-                            if (cluster1.Key >= cluster2.Key) continue;
-
-                            if (cluster1.Value.Distance(cluster2.Value) <= DISTANCE_THRESHOLD)
-                            {
-                                clustersToMerge.Add((cluster1.Key, cluster2.Key));
-                            }
-                        }
-                    }
-
-                    // Combinăm clusterele
-                    foreach (var merge in clustersToMerge)
-                    {
-                        var objectivesToUpdate = objectives.Where(o => o.ClusterId == merge.cluster2);
-                        foreach (var obj in objectivesToUpdate)
-                        {
-                            obj.ClusterId = merge.cluster1;
-                        }
-                    }
-                }
-
-                // Verificare finală: asigurăm-ne că toate obiectivele au un ClusterId
-                foreach (var objective in objectives.Where(o => o.ClusterId == null))
-                {
-                    objective.ClusterId = currentClusterId++;
+                    objectives[i].ClusterId = clusters[i];
                 }
 
                 await _context.SaveChangesAsync();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw;
             }
         }
 
-        private double CalculatePriceSimilarity(float price1, float price2)
+        private async Task<List<(double x, double y)>> NormalizePoints(List<ClusteringPoint> points)
         {
-            if (price1 == 0 && price2 == 0)
-                return 1.0;
+            var normalizedPoints = new List<(double x, double y)>();
+            
+            var xValues = points.Select(p => p.X).ToList();
+            var yValues = points.Select(p => p.Y).ToList();
+            
+            var minX = xValues.Min();
+            var maxX = xValues.Max();
+            var minY = yValues.Min();
+            var maxY = yValues.Max();
 
-            if (price1 == 0 || price2 == 0)
-                return 0.0;
+            foreach (var point in points)
+            {
+                var normalizedX = (point.X - minX) / (maxX - minX);
+                var normalizedY = (point.Y - minY) / (maxY - minY);
+                
+                normalizedPoints.Add((normalizedX, normalizedY));
+            }
 
-            var maxPrice = Math.Max(price1, price2);
-            var minPrice = Math.Min(price1, price2);
-            return minPrice / maxPrice;
+            return normalizedPoints;
         }
 
-        public async Task<ServiceResult<List<RecommendedObjectiveDto>>> GetRecommendedObjectivesAsync(int objectiveId, int count = 5)
+        private List<int> ApplyKMeans(List<(double x, double y)> points)
+        {
+            var centroids = new List<(double x, double y)>();
+            var random = new Random();
+            
+            for (int i = 0; i < K; i++)
+            {
+                var randomIndex = random.Next(points.Count);
+                centroids.Add(points[randomIndex]);
+            }
 
+            var clusters = new List<int>();
+            var oldClusters = new List<int>();
+            var iterations = 0;
+
+            do
+            {
+                clusters.Clear();
+                foreach (var point in points)
+                {
+                    var minDistance = double.MaxValue;
+                    var cluster = 0;
+
+                    for (int i = 0; i < K; i++)
+                    {
+                        var distance = CalculateDistance(point, centroids[i]);
+                        if (distance < minDistance)
+                        {
+                            minDistance = distance;
+                            cluster = i;
+                        }
+                    }
+                    clusters.Add(cluster);
+                }
+
+                for (int i = 0; i < K; i++)
+                {
+                    var clusterPoints = points.Where((p, index) => clusters[index] == i).ToList();
+                    if (clusterPoints.Any())
+                    {
+                        var newX = clusterPoints.Average(p => p.x);
+                        var newY = clusterPoints.Average(p => p.y);
+                        centroids[i] = (newX, newY);
+                    }
+                }
+
+                iterations++;
+            } while (!AreClustersEqual(clusters, oldClusters) && iterations < MAX_ITERATIONS);
+
+            return clusters;
+        }
+
+        private bool AreClustersEqual(List<int> clusters1, List<int> clusters2)
+        {
+            if (clusters1.Count != clusters2.Count) return false;
+            return !clusters1.Where((t, i) => t != clusters2[i]).Any();
+        }
+
+        private double CalculateDistance((double x, double y) p1, (double x, double y) p2)
+        {
+            return Math.Sqrt(Math.Pow(p2.x - p1.x, 2) + Math.Pow(p2.y - p1.y, 2));
+        }
+
+        public async Task<ServiceResult<List<RecommendedObjectiveDto>>> GetRecommendedObjectivesAsync(int objectiveId, int count = 4)
         {
             var result = new ServiceResult<List<RecommendedObjectiveDto>>();
+            
             var objective = await _context.Objectives
                 .FirstOrDefaultAsync(o => o.Id == objectiveId);
 
-            if (objective == null || !objective.ClusterId.HasValue)
+            if (objective == null || !objective.ClusterId.HasValue || objective.Location == null)
                 return result;
 
-            var similarObjectives = await _context.Objectives
+            var clusterObjectives = await _context.Objectives
                 .Include(o => o.Reviews)
                 .Include(o => o.Images)
-                .Where(o => o.ClusterId == objective.ClusterId && o.Id != objectiveId)
-                .OrderByDescending(o => o.Reviews.Average(r => r.Raiting))
-                .Take(count)
-                .Select(o => new RecommendedObjectiveDto
-                {
-                    Id = o.Id,
-                    Name = o.Name,
-                    City = o.City,
-                    FirstImageUrl = o.Images.Any() ? 
-                        ImageHelper.GetFirstImageURL(o.Images): 
-                        null,
-                    AverageRating = o.Reviews.Any() ? o.Reviews.Average(r => r.Raiting) : null
-                })
+                .Where(o => o.ClusterId == objective.ClusterId && o.Id != objectiveId && o.Location != null)
                 .ToListAsync();
-            result.Result = similarObjectives;
+
+            var objectivesWithDistance = clusterObjectives
+                .Select(o => new
+                {
+                    Objective = o,
+                    Distance = o.Location.Distance(objective.Location) * 111000 
+                })
+                .OrderBy(x => x.Distance) 
+                .Take(count) 
+                .Select(x => new RecommendedObjectiveDto
+                {
+                    Id = x.Objective.Id,
+                    Name = x.Objective.Name,
+                    City = x.Objective.City,
+                    FirstImageUrl = x.Objective.Images.Any() ? 
+                        ImageHelper.GetFirstImageURL(x.Objective.Images): 
+                        null,
+                    AverageRating = x.Objective.Reviews.Any() ? 
+                        x.Objective.Reviews.Average(r => r.Raiting) : 
+                        null,
+                    Distance = x.Distance 
+                })
+                .ToList();
+
+            result.Result = objectivesWithDistance;
             return result;
         }
 
-        private float ParsePrice(string? pret)
+        public async Task<ServiceResult<List<ObjectiveVisualizationDto>>> GetObjectivesForVisualizationAsync()
         {
-            if (string.IsNullOrEmpty(pret))
-                return 0;
+            var result = new ServiceResult<List<ObjectiveVisualizationDto>>();
+            
+            var objectives = await _context.Objectives
+                .ToListAsync();
 
-            var match = System.Text.RegularExpressions.Regex.Match(pret, @"\d+");
-            if (match.Success && float.TryParse(match.Value, out float result))
-                return result;
+            var visualizationData = objectives.Select(o => new ObjectiveVisualizationDto
+            {
+                Id = o.Id,
+                Name = o.Name,
+                X = o.Location?.X ?? 0,  
+                Y = o.Location?.Y ?? 0,  
+                DistanceFromCenter = CalculateDistanceFromReference(o.Location),
+                ClusterId = o.ClusterId ?? -1
+            }).ToList();
 
-            return 0;
+            result.Result = visualizationData;
+            return result;
         }
-
     }
 
-    public class ClusterPrediction
+    public class RecommendedObjectiveDto
     {
-        public uint PredictedClusterId { get; set; }
-        public float[] Distances { get; set; }
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string City { get; set; }
+        public string FirstImageUrl { get; set; }
+        public double? AverageRating { get; set; }
+        public double Distance { get; set; }  
+    }
+
+    public class ObjectiveVisualizationDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public double X { get; set; } 
+        public double Y { get; set; }  
+        public double DistanceFromCenter { get; set; } 
+        public int ClusterId { get; set; }
     }
 } 

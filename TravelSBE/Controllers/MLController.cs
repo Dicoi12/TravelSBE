@@ -42,5 +42,12 @@ namespace TravelSBE.Controllers
                 return StatusCode(500, $"Eroare la obținerea recomandărilor: {ex.Message}");
             }
         }
+
+        [HttpGet("visualization")]
+        public async Task<IActionResult> GetVisualizationData()
+        {
+            var result = await _mlService.GetObjectivesForVisualizationAsync();
+            return Ok(result);
+        }
     }
 } 
