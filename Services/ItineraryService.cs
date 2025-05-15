@@ -30,14 +30,16 @@ namespace TravelSBE.Services
                 Description = itineraryDto.Description,
                 IdUser = itineraryDto.IdUser,
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                UpdatedAt = DateTime.UtcNow,
+                DataStart = itineraryDto.DataStart,
+                DataStop = itineraryDto.DataStop
             };
             _context.Itineraries.Add(itinerary);
             await _context.SaveChangesAsync();
 
-            var savedItineraryId = itinerary.Id; // Ensure the saved itinerary ID is captured  
+            var savedItineraryId = itinerary.Id;
 
-                List<ItineraryDetail> list = new();
+            List<ItineraryDetail> list = new();
             foreach (var detailDto in itineraryDto.ItineraryDetails)
             {
                 var detail = new ItineraryDetail
@@ -47,9 +49,11 @@ namespace TravelSBE.Services
                     IdObjective = detailDto.IdObjective,
                     IdEvent = detailDto.IdEvent,
                     VisitOrder = detailDto.VisitOrder,
-                    IdItinerary = savedItineraryId, // Use the saved itinerary ID  
+                    IdItinerary = savedItineraryId,
                     CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    UpdatedAt = DateTime.UtcNow,
+                    Date = detailDto.Date,
+                    EstimatedTime = detailDto.EstimatedTime
                 };
                 list.Add(detail);
             }
@@ -86,6 +90,8 @@ namespace TravelSBE.Services
             itinerary.Description = itineraryDto.Description;
             itinerary.IdUser = itineraryDto.IdUser;
             itinerary.UpdatedAt = DateTime.UtcNow;
+            itinerary.DataStart = itineraryDto.DataStart;
+            itinerary.DataStop = itineraryDto.DataStop;
 
             try
             {
@@ -190,6 +196,8 @@ namespace TravelSBE.Services
                 Id = itinerary.Id,
                 Name = itinerary.Name,
                 Description = itinerary.Description,
+                DataStart = itinerary.DataStart,
+                DataStop = itinerary.DataStop,
                 ItineraryDetails = itinerary.ItineraryDetails.Select(detail => new ItineraryDetailModel
                 {
                     Id = detail.Id,
@@ -211,7 +219,9 @@ namespace TravelSBE.Services
                         Description = detail.Event.Description,
                         Images = ImageHelper.ConvertToImageUrls(detail.Event.Images)
                     } : null,
-                    VisitOrder = detail.VisitOrder
+                    VisitOrder = detail.VisitOrder,
+                    Date = detail.Date,
+                    EstimatedTime = detail.EstimatedTime
                 }).ToArray()
             }).ToList();
 
@@ -274,10 +284,10 @@ namespace TravelSBE.Services
             var itinerary = await _context.Itineraries
                 .Include(i => i.ItineraryDetails)
                     .ThenInclude(i => i.Objective)
-                        .ThenInclude(o => o.Images)
+                        .ThenInclude(o => o!.Images)
                 .Include(i => i.ItineraryDetails)
                     .ThenInclude(i => i.Event)
-                        .ThenInclude(e => e.Images)
+                        .ThenInclude(e => e!.Images)
                 .FirstOrDefaultAsync(i => i.Id == id);
 
             if (itinerary == null)
@@ -292,6 +302,8 @@ namespace TravelSBE.Services
                 Id = itinerary.Id,
                 Name = itinerary.Name,
                 Description = itinerary.Description,
+                DataStart = itinerary.DataStart,
+                DataStop = itinerary.DataStop,
                 ItineraryDetails = itinerary.ItineraryDetails.Select(detail => new ItineraryDetailModel
                 {
                     Id = detail.Id,
@@ -303,8 +315,8 @@ namespace TravelSBE.Services
                         Id = detail.Objective.Id,
                         Name = detail.Objective.Name,
                         Description = detail.Objective.Description,
-                        Latitude=detail.Objective.Latitude,
-                        Longitude=detail.Objective.Longitude,
+                        Latitude = detail.Objective.Latitude,
+                        Longitude = detail.Objective.Longitude,
                         Images = ImageHelper.ConvertToImageUrls(detail.Objective.Images)
                     } : null,
                     IdEvent = detail.IdEvent,
@@ -315,7 +327,9 @@ namespace TravelSBE.Services
                         Description = detail.Event.Description,
                         Images = ImageHelper.ConvertToImageUrls(detail.Event.Images)
                     } : null,
-                    VisitOrder = detail.VisitOrder
+                    VisitOrder = detail.VisitOrder,
+                    Date = detail.Date,
+                    EstimatedTime = detail.EstimatedTime
                 }).ToArray()
             };
 

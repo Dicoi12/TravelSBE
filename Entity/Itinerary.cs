@@ -17,10 +17,9 @@ namespace TravelSBE.Entity
         [ForeignKey("IdUser")]
         public int? IdUser { get; set; }
         public User? User { get; set; }
-        //public DateTime? DataStart { get; set; }
-        //public DateTime? DataStop { get; set; }
+        public DateTime? DataStart { get; set; }
+        public DateTime? DataStop { get; set; }
 
-        // Lista cu detaliile itinerariului
         public List<ItineraryDetail> ItineraryDetails { get; set; } = new List<ItineraryDetail>();
     }
 }

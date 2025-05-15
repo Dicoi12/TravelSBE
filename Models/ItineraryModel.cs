@@ -11,5 +11,7 @@ namespace TravelSBE.Models
         public int? IdUser { get; set; }
         public User? User { get; set; }
         public List<ObjectiveImage> Images { get; set; } = new List<ObjectiveImage>();
+        public DateTime? DataStart { get; set; }
+        public DateTime? DataStop { get; set; }
     }
 }

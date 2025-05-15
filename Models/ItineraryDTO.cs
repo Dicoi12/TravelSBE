@@ -9,5 +9,7 @@ namespace TravelsBE.Models
         public string Description { get; set; }
         public int? IdUser { get; set; } = null;
         public ItineraryDetail[] ItineraryDetails { get; set; } 
+        public DateTime? DataStart { get; set; }
+        public DateTime? DataStop { get; set; }
     }
 }

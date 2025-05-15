@@ -31,6 +31,8 @@ namespace TravelsBE.Services
                 IdEvent = itineraryDetailDto.IdEvent,
                 VisitOrder = itineraryDetailDto.VisitOrder,
                 IdItinerary = itineraryDetailDto.IdItinerary,
+                Date = itineraryDetailDto.Date,
+                EstimatedTime = itineraryDetailDto.EstimatedTime,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -61,6 +63,9 @@ namespace TravelsBE.Services
             detail.IdEvent = itineraryDetailDto.IdEvent;
             detail.VisitOrder = itineraryDetailDto.VisitOrder;
             detail.UpdatedAt = DateTime.UtcNow;
+            detail.IdItinerary = itineraryDetailDto.IdItinerary;
+            detail.Date = itineraryDetailDto.Date;
+            detail.EstimatedTime = itineraryDetailDto.EstimatedTime;
 
             await _context.SaveChangesAsync();
 

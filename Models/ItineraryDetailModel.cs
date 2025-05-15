@@ -16,5 +16,7 @@ namespace TravelSBE.Models
         public string[] Images { get; set; } = new string[0];
         public string Name { get; set; }
         public string? Descriere { get; set; }
+        public DateTime? Date { get; set; }
+        public float? EstimatedTime { get; set; }
     }
 }

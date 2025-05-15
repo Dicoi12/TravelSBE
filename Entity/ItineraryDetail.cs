@@ -19,7 +19,6 @@ namespace TravelSBE.Entity
         public int? IdItinerary { get; set; }
         public Itinerary? Itinerary { get; set; }
 
-        // Un ItineraryDetail poate avea un obiectiv sau un eveniment
         [ForeignKey("Objective")]
         public int? IdObjective { get; set; }
         public Objective? Objective { get; set; }
@@ -27,6 +26,8 @@ namespace TravelSBE.Entity
         [ForeignKey("Event")]
         public int? IdEvent { get; set; }
         public Event? Event { get; set; }
+        public DateTime? Date { get; set; }
+        public float? EstimatedTime { get; set; }
 
         public int VisitOrder { get; set; }
     }
