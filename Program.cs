@@ -76,8 +76,8 @@ namespace TravelSBE
                 //var mlService = scope.ServiceProvider.GetRequiredService<IMLService>();
                 //await mlService.TrainModelAsync();
 
-                    var objectiveService = scope.ServiceProvider.GetRequiredService<IObjectiveService>();
-                    await objectiveService.UpdateMissingLocationsAsync();
+                var objectiveService = scope.ServiceProvider.GetRequiredService<IObjectiveService>();
+                await objectiveService.UpdateMissingLocationsAsync();
 
                 var users = await dbContext.Users.ToListAsync();
                 var objectives = await dbContext.Objectives.Include(x => x.Reviews).Where(x => x.Reviews.Count == 0).ToListAsync();
@@ -101,18 +101,15 @@ namespace TravelSBE
                                 UpdatedAt = DateTime.UtcNow
                             };
 
-                                dbContext.Reviews.Add(review);
-                            }
+                            dbContext.Reviews.Add(review);
                         }
                     }
+                }
 
-                    await dbContext.SaveChangesAsync();
-                }
-                catch (Exception)
-                {
-                    /* Handle exceptions */
-                }
+
+                await dbContext.SaveChangesAsync();
             }
+                
 
             if (app.Environment.IsDevelopment())
             {
