@@ -1,12 +1,8 @@
-using Microsoft.ML;
-using Microsoft.ML.Trainers;
-using TravelSBE.Data;
-using TravelSBE.Models.ML;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
+using TravelSBE.Data;
 using TravelSBE.Entity;
 using TravelSBE.Utils;
-using System.Collections.Generic;
 
 namespace TravelSBE.Services
 {
@@ -170,6 +166,7 @@ namespace TravelSBE.Services
             var result = new ServiceResult<List<RecommendedObjectiveDto>>();
             
             var objective = await _context.Objectives
+                .Include(o => o.ObjectiveType)
                 .FirstOrDefaultAsync(o => o.Id == objectiveId);
 
             if (objective == null || !objective.ClusterId.HasValue || objective.Location == null)
@@ -178,17 +175,24 @@ namespace TravelSBE.Services
             var clusterObjectives = await _context.Objectives
                 .Include(o => o.Reviews)
                 .Include(o => o.Images)
+                .Include(o => o.ObjectiveType)
                 .Where(o => o.ClusterId == objective.ClusterId && o.Id != objectiveId && o.Location != null)
                 .ToListAsync();
 
-            var objectivesWithDistance = clusterObjectives
+            var objectivesWithScore = clusterObjectives
                 .Select(o => new
                 {
                     Objective = o,
-                    Distance = o.Location.Distance(objective.Location) * 111000 
+                    Distance = o.Location.Distance(objective.Location) * 111000,
+                    TypeSimilarity = o.Type == objective.Type? 1.0 : 0.5
                 })
-                .OrderBy(x => x.Distance) 
-                .Take(count) 
+                .Select(x => new
+                {
+                    Objective = x.Objective,
+                    Score = CalculateRecommendationScore(x.Distance, x.TypeSimilarity)
+                })
+                .OrderByDescending(x => x.Score)
+                .Take(count)
                 .Select(x => new RecommendedObjectiveDto
                 {
                     Id = x.Objective.Id,
@@ -200,12 +204,23 @@ namespace TravelSBE.Services
                     AverageRating = x.Objective.Reviews.Any() ? 
                         x.Objective.Reviews.Average(r => r.Raiting) : 
                         null,
-                    Distance = x.Distance 
+                    Distance = x.Objective.Location.Distance(objective.Location) * 111000,
+                    ObjectiveType = x.Objective.ObjectiveType?.Name
                 })
                 .ToList();
 
-            result.Result = objectivesWithDistance;
+            result.Result = objectivesWithScore;
             return result;
+        }
+
+        private double CalculateRecommendationScore(double distance, double typeSimilarity)
+        {
+            // Normalizăm distanța între 0 și 1 (0 fiind cea mai apropiată)
+            double normalizedDistance = Math.Min(distance / 5000, 1.0); // Considerăm 5km ca distanță maximă
+            
+            // Calculăm scorul final (mai mare = mai bun)
+            // 60% pentru distanță, 40% pentru similaritatea tipului
+            return (1 - normalizedDistance) * 0.6 + typeSimilarity * 0.4;
         }
 
         public async Task<ServiceResult<List<ObjectiveVisualizationDto>>> GetObjectivesForVisualizationAsync()
@@ -237,7 +252,8 @@ namespace TravelSBE.Services
         public string City { get; set; }
         public string FirstImageUrl { get; set; }
         public double? AverageRating { get; set; }
-        public double Distance { get; set; }  
+        public double Distance { get; set; }
+        public string ObjectiveType { get; set; }
     }
 
     public class ObjectiveVisualizationDto
