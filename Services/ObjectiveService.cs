@@ -14,6 +14,7 @@ using TravelSBE.Utils;
 using System.Security.AccessControl;
 using TravelsBE.Models.Filters;
 using NetTopologySuite.Geometries;
+using TravelsBE.Models;
 
 namespace TravelSBE.Services
 {
@@ -252,7 +253,7 @@ namespace TravelSBE.Services
 
             var requestBody = new
             {
-                model = "phi-4", // Schimbă cu modelul ales
+                model = "phi-4",
                 messages = new[]
                 {
             new { role = "system", content = "Oferă răspunsuri scurte și precise despre turism." },
@@ -335,22 +336,48 @@ namespace TravelSBE.Services
         }
         public async Task UpdateMissingLocationsAsync()
         {
-            // Selectăm toate obiectivele care nu au locația setată, dar au latitudine și longitudine valide
             var objectivesToUpdate = await _context.Objectives
                 .Where(o => o.Location == null && o.Latitude != 0 && o.Longitude != 0)
                 .ToListAsync();
 
             foreach (var objective in objectivesToUpdate)
             {
-                // Setăm proprietatea Location folosind latitudinea și longitudinea
                 objective.Location = new Point(objective.Longitude, objective.Latitude) { SRID = 4326 };
             }
 
             if (objectivesToUpdate.Any())
             {
-                // Salvăm modificările în baza de date
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task<List<SimpleObjective>> GetObjectivesForModel(string? search)
+        {
+            var query = _context.Objectives
+                .AsNoTracking()
+                .Include(x => x.ObjectiveType)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var lowered = search.ToLower();
+                query = query.Where(o =>
+                    o.Name.ToLower().Contains(lowered) ||
+                    (o.City != null && o.City.ToLower().Contains(lowered))
+                );
+            }
+
+            var objectives = await query.ToListAsync();
+
+            var result = objectives.Select(o => new SimpleObjective
+            {
+                Denumire = o.Name,
+                Descriere = o.Description ?? string.Empty,
+                Tip = o.ObjectiveType != null ? o.ObjectiveType.Name : string.Empty,
+                Oras = o.City ?? string.Empty
+            }).ToList();
+
+            return result;
         }
     }
 }

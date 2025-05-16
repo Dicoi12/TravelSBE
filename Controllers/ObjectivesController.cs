@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TravelsBE.Dtos;
+using TravelsBE.Models;
 using TravelsBE.Models.Filters;
 using TravelSBE.Entity;
 using TravelSBE.Models;
@@ -26,6 +27,11 @@ namespace TravelSBE.Controllers
         {
             var objectives = await _objectiveService.GetObjectivesAsync(search);
             return objectives;
+        }
+        [HttpGet("GetObjectivesForModel")]
+        public async Task<List<SimpleObjective>> GetObjectivesForModel(string? search)
+        {
+            return await _objectiveService.GetObjectivesForModel(search);
         }
 
         [HttpGet("ImportObjectives")]
