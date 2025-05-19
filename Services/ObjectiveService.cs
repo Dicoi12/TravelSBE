@@ -171,15 +171,15 @@ namespace TravelSBE.Services
             return result;
         }
 
-        private string FormatDistance(double distanceInMeters)
+        private string FormatDistance(double distanceInKm)
         {
-            if (distanceInMeters < 1000)
+            if (distanceInKm < 1)
             {
-                return $"{Math.Round(distanceInMeters)} metri";
+                return $"{Math.Round(distanceInKm * 1000)} metri";
             }
             else
             {
-                return $"{Math.Round(distanceInMeters / 1000, 1)} km";
+                return $"{Math.Round(distanceInKm, 1)} km";
             }
         }
 
@@ -245,7 +245,8 @@ namespace TravelSBE.Services
                     Math.Cos(lat1 * Math.PI / 180) * Math.Cos(lat2 * Math.PI / 180) *
                     Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
             var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-            return R * c;
+            var distance = R * c;
+            return distance; // returnează distanța în kilometri
         }
         private async Task<string> GenerateObjectiveDetailsAsync(string name, string city)
         {

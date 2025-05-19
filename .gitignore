@@ -20,6 +20,7 @@ obj/
 appsettings.Development.json
 appsettings.Local.json
 appsettings.Production.json
+appsettings.json
 
 # Build output folders
 build/

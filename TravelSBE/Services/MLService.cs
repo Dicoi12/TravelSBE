@@ -30,6 +30,7 @@ namespace TravelSBE.Services
             public Objective Objective { get; set; }
             public double X { get; set; }
             public double Y { get; set; }
+            public double TypeScore { get; set; }
         }
 
         public MLService(ApplicationDbContext context, IConfiguration configuration)
@@ -37,6 +38,18 @@ namespace TravelSBE.Services
             _context = context;
             _configuration = configuration;
             _referencePoint = new Point(26.1025, 44.4268) { SRID = 4326 };
+        }
+
+        private double CalculateTypeScore(Objective objective)
+        {
+            if (objective.ObjectiveType == null) return 0.2;
+
+            var objectiveTypes = _context.ObjectiveTypes.ToList();
+            var typeCount = objectiveTypes.Count;
+
+            var currentTypeIndex = objectiveTypes.FindIndex(t => t.Id == objective.ObjectiveType.Id);
+            
+            return currentTypeIndex >= 0 ? 1.0 - (currentTypeIndex / (double)typeCount) : 0.2;
         }
 
         private double CalculateDistanceFromReference(Point? location)
@@ -58,12 +71,12 @@ namespace TravelSBE.Services
                 var points = objectives.Select(o => new ClusteringPoint
                 {
                     Objective = o,
-                    X = o.Location?.X ?? 0,  
-                    Y = o.Location?.Y ?? 0  
+                    X = o.Location?.X ?? 0,
+                    Y = o.Location?.Y ?? 0,
+                    TypeScore = CalculateTypeScore(o)
                 }).ToList();
 
                 var normalizedPoints = await NormalizePoints(points);
-
                 var clusters = ApplyKMeans(normalizedPoints);
 
                 for (int i = 0; i < objectives.Count; i++)
@@ -79,32 +92,36 @@ namespace TravelSBE.Services
             }
         }
 
-        private async Task<List<(double x, double y)>> NormalizePoints(List<ClusteringPoint> points)
+        private async Task<List<(double x, double y, double type)>> NormalizePoints(List<ClusteringPoint> points)
         {
-            var normalizedPoints = new List<(double x, double y)>();
+            var normalizedPoints = new List<(double x, double y, double type)>();
             
             var xValues = points.Select(p => p.X).ToList();
             var yValues = points.Select(p => p.Y).ToList();
+            var typeValues = points.Select(p => p.TypeScore).ToList();
             
             var minX = xValues.Min();
             var maxX = xValues.Max();
             var minY = yValues.Min();
             var maxY = yValues.Max();
+            var minType = typeValues.Min();
+            var maxType = typeValues.Max();
 
             foreach (var point in points)
             {
                 var normalizedX = (point.X - minX) / (maxX - minX);
                 var normalizedY = (point.Y - minY) / (maxY - minY);
+                var normalizedType = (point.TypeScore - minType) / (maxType - minType);
                 
-                normalizedPoints.Add((normalizedX, normalizedY));
+                normalizedPoints.Add((normalizedX, normalizedY, normalizedType));
             }
 
             return normalizedPoints;
         }
 
-        private List<int> ApplyKMeans(List<(double x, double y)> points)
+        private List<int> ApplyKMeans(List<(double x, double y, double type)> points)
         {
-            var centroids = new List<(double x, double y)>();
+            var centroids = new List<(double x, double y, double type)>();
             var random = new Random();
             
             for (int i = 0; i < K; i++)
@@ -144,7 +161,8 @@ namespace TravelSBE.Services
                     {
                         var newX = clusterPoints.Average(p => p.x);
                         var newY = clusterPoints.Average(p => p.y);
-                        centroids[i] = (newX, newY);
+                        var newType = clusterPoints.Average(p => p.type);
+                        centroids[i] = (newX, newY, newType);
                     }
                 }
 
@@ -160,9 +178,12 @@ namespace TravelSBE.Services
             return !clusters1.Where((t, i) => t != clusters2[i]).Any();
         }
 
-        private double CalculateDistance((double x, double y) p1, (double x, double y) p2)
+        private double CalculateDistance((double x, double y, double type) p1, (double x, double y, double type) p2)
         {
-            return Math.Sqrt(Math.Pow(p2.x - p1.x, 2) + Math.Pow(p2.y - p1.y, 2));
+            var spatialDistance = Math.Sqrt(Math.Pow(p2.x - p1.x, 2) + Math.Pow(p2.y - p1.y, 2));
+            var typeDistance = Math.Abs(p2.type - p1.type);
+            
+            return 0.8 * spatialDistance + 0.1 * typeDistance;
         }
 
         public async Task<ServiceResult<List<RecommendedObjectiveDto>>> GetRecommendedObjectivesAsync(int objectiveId, int count = 4)
@@ -170,6 +191,7 @@ namespace TravelSBE.Services
             var result = new ServiceResult<List<RecommendedObjectiveDto>>();
             
             var objective = await _context.Objectives
+                .Include(o => o.ObjectiveType)
                 .FirstOrDefaultAsync(o => o.Id == objectiveId);
 
             if (objective == null || !objective.ClusterId.HasValue || objective.Location == null)
@@ -178,6 +200,7 @@ namespace TravelSBE.Services
             var clusterObjectives = await _context.Objectives
                 .Include(o => o.Reviews)
                 .Include(o => o.Images)
+                .Include(o => o.ObjectiveType)
                 .Where(o => o.ClusterId == objective.ClusterId && o.Id != objectiveId && o.Location != null)
                 .ToListAsync();
 
@@ -185,10 +208,12 @@ namespace TravelSBE.Services
                 .Select(o => new
                 {
                     Objective = o,
-                    Distance = o.Location.Distance(objective.Location) * 111000 
+                    Distance = o.Location.Distance(objective.Location) * 111000,
+                    TypeSimilarity = Math.Abs(CalculateTypeScore(o) - CalculateTypeScore(objective))
                 })
-                .OrderBy(x => x.Distance) 
-                .Take(count) 
+                .OrderBy(x => x.Distance)
+                .ThenBy(x => x.TypeSimilarity)
+                .Take(count)
                 .Select(x => new RecommendedObjectiveDto
                 {
                     Id = x.Objective.Id,
@@ -200,7 +225,8 @@ namespace TravelSBE.Services
                     AverageRating = x.Objective.Reviews.Any() ? 
                         x.Objective.Reviews.Average(r => r.Raiting) : 
                         null,
-                    Distance = x.Distance 
+                    Distance = x.Distance,
+                    ObjectiveType = x.Objective.ObjectiveType?.Name
                 })
                 .ToList();
 
@@ -213,16 +239,19 @@ namespace TravelSBE.Services
             var result = new ServiceResult<List<ObjectiveVisualizationDto>>();
             
             var objectives = await _context.Objectives
+                .Include(o => o.ObjectiveType)
                 .ToListAsync();
 
             var visualizationData = objectives.Select(o => new ObjectiveVisualizationDto
             {
                 Id = o.Id,
                 Name = o.Name,
-                X = o.Location?.X ?? 0,  
-                Y = o.Location?.Y ?? 0,  
+                X = o.Location?.X ?? 0,
+                Y = o.Location?.Y ?? 0,
                 DistanceFromCenter = CalculateDistanceFromReference(o.Location),
-                ClusterId = o.ClusterId ?? -1
+                ClusterId = o.ClusterId ?? -1,
+                TypeScore = CalculateTypeScore(o),
+                ObjectiveType = o.ObjectiveType?.Name
             }).ToList();
 
             result.Result = visualizationData;
@@ -237,16 +266,19 @@ namespace TravelSBE.Services
         public string City { get; set; }
         public string FirstImageUrl { get; set; }
         public double? AverageRating { get; set; }
-        public double Distance { get; set; }  
+        public double Distance { get; set; }
+        public string ObjectiveType { get; set; }
     }
 
     public class ObjectiveVisualizationDto
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public double X { get; set; } 
-        public double Y { get; set; }  
-        public double DistanceFromCenter { get; set; } 
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double DistanceFromCenter { get; set; }
         public int ClusterId { get; set; }
+        public double TypeScore { get; set; }
+        public string ObjectiveType { get; set; }
     }
 } 

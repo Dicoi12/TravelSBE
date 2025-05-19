@@ -73,8 +73,8 @@ namespace TravelSBE
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 await dbContext.Database.MigrateAsync();
 
-                //var mlService = scope.ServiceProvider.GetRequiredService<IMLService>();
-                //await mlService.TrainModelAsync();
+                var mlService = scope.ServiceProvider.GetRequiredService<IMLService>();
+                await mlService.TrainModelAsync();
 
                 var objectiveService = scope.ServiceProvider.GetRequiredService<IObjectiveService>();
                 await objectiveService.UpdateMissingLocationsAsync();
