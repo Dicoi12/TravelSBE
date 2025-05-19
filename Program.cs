@@ -9,6 +9,7 @@ using TravelsBE.Services;
 using TravelsBE.Services.Interfaces;
 using Microsoft.Extensions.FileProviders;
 using TravelSBE.Entity;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 namespace TravelSBE
 {
@@ -20,11 +21,10 @@ namespace TravelSBE
 
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowFrontend", policy =>
-                    policy.WithOrigins("http://localhost:5173")
-                          .AllowAnyMethod()
-                          .AllowAnyHeader()
-                          .AllowCredentials());
+                options.AddPolicy("AllowAll", policy =>
+         policy.AllowAnyOrigin()
+               .AllowAnyMethod()
+               .AllowAnyHeader());
             });
 
             builder.Services.AddControllers()
@@ -116,9 +116,8 @@ namespace TravelSBE
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseHttpsRedirection();
 
-            app.UseCors("AllowFrontend");
+            app.UseCors("AllowAll");
 
             app.UseStaticFiles();
 
