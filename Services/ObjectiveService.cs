@@ -15,6 +15,7 @@ using System.Security.AccessControl;
 using TravelsBE.Models.Filters;
 using NetTopologySuite.Geometries;
 using TravelsBE.Models;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace TravelSBE.Services
 {
@@ -194,15 +195,30 @@ namespace TravelSBE.Services
                 result.IsSuccessful = false;
                 return result;
             }
+
             if (string.IsNullOrEmpty(objective.Description))
             {
                 objective.Description = await GenerateObjectiveDetailsAsync(objective.Name, objective.City);
             }
+
             objective.CreatedAt = DateTime.UtcNow;
             objective.UpdatedAt = DateTime.UtcNow;
+
             var mapped = _mapper.Map<Objective>(objective);
+
+                mapped.Location = new Point(objective.Longitude, objective.Latitude) { SRID = 4326 };
+            
+
             _context.Objectives.Add(mapped);
             await _context.SaveChangesAsync();
+
+            var mlService = _context.GetService<IMLService>();
+            if (mlService != null)
+            {
+                await mlService.TrainModelAsync();
+                await mlService.UpdateClusterNeighborsAsync();
+            }
+
             result.Result = _mapper.Map<ObjectiveModel>(mapped);
             return result;
         }

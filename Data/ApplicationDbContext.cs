@@ -24,6 +24,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<ObjectiveType> ObjectiveTypes { get; set; }
     public DbSet<ObjectiveSchedule> ObjectiveSchedules { get; set; }
     public DbSet<Experience> Experiences { get; set; }
+    public DbSet<ClusterNeighbor> ClusterNeighbors { get; set; }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.Entity<User>()
@@ -49,7 +51,6 @@ public class ApplicationDbContext : DbContext
                .HasForeignKey(e => e.IdObjective)
                .OnDelete(DeleteBehavior.Cascade);
 
-
         builder.Entity<Event>()
                .HasMany(e => e.Images)
                .WithOne(e => e.Event)
@@ -66,14 +67,33 @@ public class ApplicationDbContext : DbContext
             .WithOne(e => e.Experience)
             .HasForeignKey(e => e.IdExperienta).OnDelete(DeleteBehavior.Cascade); 
 
-
         builder.Entity<ObjectiveSchedule>()
             .Property(s => s.DayOfWeek)
             .HasConversion<string>();
-            builder.Entity<User>().Property(u => u.Location).HasColumnType("geography (point)");
-            builder.Entity<Objective>().Property(o => o.Location).HasColumnType("geography (point)");
-            builder.Entity<Event>().Property(o => o.Location).HasColumnType("geography (point)");
 
+        builder.Entity<User>().Property(u => u.Location).HasColumnType("geography (point)");
+        builder.Entity<Objective>().Property(o => o.Location).HasColumnType("geography (point)");
+        builder.Entity<Event>().Property(o => o.Location).HasColumnType("geography (point)");
+
+        // Configurare pentru ClusterNeighbor
+        builder.Entity<ClusterNeighbor>()
+            .HasOne(cn => cn.SourceObjective)
+            .WithMany()
+            .HasForeignKey(cn => cn.SourceObjectiveId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ClusterNeighbor>()
+            .HasOne(cn => cn.TargetObjective)
+            .WithMany()
+            .HasForeignKey(cn => cn.TargetObjectiveId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ClusterNeighbor>()
+            .HasIndex(cn => new { cn.SourceObjectiveId, cn.TargetObjectiveId })
+            .IsUnique();
+
+        builder.Entity<ClusterNeighbor>()
+            .HasIndex(cn => cn.ClusterId);
     }
 }
 

@@ -75,9 +75,19 @@ namespace TravelSBE
 
                 var mlService = scope.ServiceProvider.GetRequiredService<IMLService>();
                 await mlService.TrainModelAsync();
+                await mlService.UpdateClusterNeighborsAsync();
 
                 var objectiveService = scope.ServiceProvider.GetRequiredService<IObjectiveService>();
                 await objectiveService.UpdateMissingLocationsAsync();
+
+                // Adaugă obiective implicite dacă nu există
+                var defaultObjectivesResult = objectiveService.InsertDefaultObjectives();
+                if (defaultObjectivesResult.Result)
+                {
+                    // Reantrenează modelul după adăugarea obiectivelor implicite
+                    await mlService.TrainModelAsync();
+                    await mlService.UpdateClusterNeighborsAsync();
+                }
 
                 var users = await dbContext.Users.ToListAsync();
                 var objectives = await dbContext.Objectives.Include(x => x.Reviews).Where(x => x.Reviews.Count == 0).ToListAsync();
@@ -105,7 +115,6 @@ namespace TravelSBE
                         }
                     }
                 }
-
 
                 await dbContext.SaveChangesAsync();
             }

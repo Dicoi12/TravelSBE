@@ -21,32 +21,53 @@ namespace TravelSBE.Controllers
             try
             {
                 await _mlService.TrainModelAsync();
-                return Ok("Model antrenat cu succes");
+                await _mlService.UpdateClusterNeighborsAsync();
+                return Ok(new { message = "Model antrenat cu succes și vecini actualizați" });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Eroare la antrenarea modelului: {ex.Message}");
+                return StatusCode(500, new { error = ex.Message });
             }
         }
 
         [HttpGet("recommendations/{objectiveId}")]
         public async Task<IActionResult> GetRecommendations(int objectiveId, [FromQuery] int count = 4)
         {
-            try
-            {
-                var recommendedObjectives = await _mlService.GetRecommendedObjectivesAsync(objectiveId, count);
-                return Ok(recommendedObjectives);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Eroare la obținerea recomandărilor: {ex.Message}");
-            }
+            var result = await _mlService.GetRecommendedObjectivesAsync(objectiveId, count);
+            if (result.Result == null)
+                return NotFound(new { error = "Nu s-au găsit recomandări" });
+            return Ok(result);
         }
 
         [HttpGet("visualization")]
         public async Task<IActionResult> GetVisualizationData()
         {
             var result = await _mlService.GetObjectivesForVisualizationAsync();
+            if (result.Result == null)
+                return NotFound(new { error = "Nu s-au găsit date pentru vizualizare" });
+            return Ok(result);
+        }
+
+        [HttpPost("neighbors/update")]
+        public async Task<IActionResult> UpdateNeighbors()
+        {
+            try
+            {
+                await _mlService.UpdateClusterNeighborsAsync();
+                return Ok(new { message = "Vecini actualizați cu succes" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [HttpGet("neighbors/{objectiveId}")]
+        public async Task<IActionResult> GetNearestNeighbors(int objectiveId, [FromQuery] int count = 4)
+        {
+            var result = await _mlService.GetNearestNeighborsAsync(objectiveId, count);
+            if (result.Result == null)
+                return NotFound(new { error = "Nu s-au găsit vecini" });
             return Ok(result);
         }
     }
