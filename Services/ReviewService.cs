@@ -21,6 +21,7 @@ namespace TravelSBE.Services
             return await _context.Reviews
                 .Include(r => r.User)
                 .Where(r => r.IdObjective == objectiveId)
+                .OrderByDescending(x=>x.CreatedAt)
                 .ToListAsync();
         }
 

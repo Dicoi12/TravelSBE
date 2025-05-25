@@ -85,8 +85,8 @@ namespace TravelSBE
                 if (defaultObjectivesResult.Result)
                 {
                     // Reantrenează modelul după adăugarea obiectivelor implicite
-                    await mlService.TrainModelAsync();
-                    await mlService.UpdateClusterNeighborsAsync();
+                    //await mlService.TrainModelAsync();
+                    //await mlService.UpdateClusterNeighborsAsync();
                 }
 
                 var users = await dbContext.Users.ToListAsync();
