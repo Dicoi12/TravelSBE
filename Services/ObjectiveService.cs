@@ -80,9 +80,9 @@ namespace TravelSBE.Services
             var item = await _context.Objectives
                                 .AsNoTracking()
 
-                .Include(x=>x.ObjectiveType)
+                .Include(x => x.ObjectiveType)
                 .Include(x => x.Images)
-                .Include(x=>x.Reviews)
+                .Include(x => x.Reviews)
                 .FirstOrDefaultAsync(x => x.Id == id);
 
             if (item == null)
@@ -141,8 +141,8 @@ namespace TravelSBE.Services
                 var userLocation = new Point(filter.Longitude.Value, filter.Latitude.Value) { SRID = 4326 };
 
                 query = query
-                    .Where(o => o.Location != null) 
-                    .OrderBy(o => o.Location.Distance(userLocation)); 
+                    .Where(o => o.Location != null)
+                    .OrderBy(o => o.Location.Distance(userLocation));
 
                 if (filter.MaxDistance.HasValue)
                 {
@@ -158,15 +158,17 @@ namespace TravelSBE.Services
                 Name = o.Name,
                 Description = o.Description,
                 Latitude = o.Location?.Y ?? 0,
-                Longitude = o.Location?.X ?? 0, 
-                Distance = CalculateDistanceKm(filter.Latitude.Value, filter.Longitude.Value, o.Location.Y, o.Location.X),
+                Longitude = o.Location?.X ?? 0,
+                Distance = filter.Latitude.HasValue && filter.Longitude.HasValue && o.Location != null
+                            ? CalculateDistanceKm(filter.Latitude.Value, filter.Longitude.Value, o.Location.Y, o.Location.X)
+                                    : 0,
                 FormattedDistance = filter.Latitude.HasValue && filter.Longitude.HasValue && o.Location != null
                     ? FormatDistance(CalculateDistanceKm(filter.Latitude.Value, filter.Longitude.Value, o.Location.Y, o.Location.X))
                     : "N/A",
                 City = o.City,
                 Images = o.Images.Select(img => $"{_baseUrl}{img.FilePath}").ToList(),
                 MedieReview = o.Reviews.Any() ? o.Reviews.Average(r => r.Raiting) : (double?)null
-            }).OrderBy(o => o.Distance).ToList(); 
+            }).OrderBy(o => o.Distance).ToList();
 
             result.Result = objectiveModels;
             return result;
@@ -206,8 +208,8 @@ namespace TravelSBE.Services
 
             var mapped = _mapper.Map<Objective>(objective);
 
-                mapped.Location = new Point(objective.Longitude, objective.Latitude) { SRID = 4326 };
-            
+            mapped.Location = new Point(objective.Longitude, objective.Latitude) { SRID = 4326 };
+
 
             _context.Objectives.Add(mapped);
             await _context.SaveChangesAsync();
@@ -294,7 +296,7 @@ namespace TravelSBE.Services
                 .GetString() ?? "Descriere indisponibilă.";
         }
 
-        public  ServiceResult<bool> InsertDefaultObjectives()
+        public ServiceResult<bool> InsertDefaultObjectives()
         {
             var result = new ServiceResult<bool>();
             List<Objective> objectives = new List<Objective>
@@ -344,7 +346,7 @@ namespace TravelSBE.Services
                 result.Result = true;
                 return result;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 result.Result = false;
                 result.ValidationMessage = ex.Message;
