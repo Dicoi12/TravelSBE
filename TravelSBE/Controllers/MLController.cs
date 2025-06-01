@@ -70,5 +70,12 @@ namespace TravelSBE.Controllers
                 return NotFound(new { error = "Nu s-au găsit vecini" });
             return Ok(result);
         }
+
+        [HttpGet("cluster-analysis")]
+        public async Task<IActionResult> GetClusterAnalysis()
+        {
+            var result = await _mlService.GetClusterAnalysisAsync();
+            return Ok(result);
+        }
     }
 } 

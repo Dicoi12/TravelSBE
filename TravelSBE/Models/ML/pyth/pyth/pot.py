@@ -1,6 +1,5 @@
 import requests
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
 import sys
 import urllib3
@@ -10,9 +9,9 @@ import numpy as np
 # Dezactivează avertismentele pentru certificatul SSL auto-semnat
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-def get_data_from_api():
+def get_neighbors_from_api(objective_id):
     try:
-        url = 'https://localhost:7100/api/ML/visualization'
+        url = f'https://localhost:7100/api/ML/neighbors/{objective_id}'
         print(f"Încerc să conectez la {url}")
         
         response = requests.get(url, verify=False)
@@ -20,140 +19,103 @@ def get_data_from_api():
         
         data = response.json()
         print("\nDate primite de la API:")
-        print(f"Număr total de obiective: {len(data['result'])}")
-        
-        # Afișează statistici despre date
-        cluster_ids = set(item['clusterId'] for item in data['result'])
-        print(f"Număr de clustere găsite: {len(cluster_ids)}")
-        print(f"ID-urile clusterelor: {cluster_ids}")
-        
-        # Afișează distribuția obiectivelor pe clustere
-        cluster_distribution = {}
-        for item in data['result']:
-            cluster_id = item['clusterId']
-            if cluster_id not in cluster_distribution:
-                cluster_distribution[cluster_id] = 0
-            cluster_distribution[cluster_id] += 1
-        
-        print("\nDistribuția obiectivelor pe clustere:")
-        for cluster_id, count in cluster_distribution.items():
-            print(f"Cluster {cluster_id}: {count} obiective")
-        
-        # Verifică valorile pentru fiecare proprietate
-        print("\nStatistici despre proprietăți:")
-        properties = ['x', 'y', 'averageRating', 'price']
-        for prop in properties:
-            values = [item[prop] for item in data['result']]
-            print(f"{prop}: min={min(values):.2f}, max={max(values):.2f}, medie={sum(values)/len(values):.2f}")
+        print(f"Număr de vecini găsiți: {len(data['result'])}")
         
         return data['result']
     except Exception as e:
         print(f"Eroare la obținerea datelor: {e}")
         sys.exit(1)
 
-def create_visualization(data):
+def get_objective_details(objective_id):
+    try:
+        url = f'https://localhost:7100/api/Objective/{objective_id}'
+        print(f"Încerc să conectez la {url}")
+        
+        response = requests.get(url, verify=False)
+        response.raise_for_status()
+        
+        data = response.json()
+        return data['result']
+    except Exception as e:
+        print(f"Eroare la obținerea detaliilor obiectivului: {e}")
+        sys.exit(1)
+
+def create_neighbors_visualization(objective_id, neighbors):
     # Setează stilul pentru grafice
     plt.style.use('default')
     
-    # Creează o figură cu 2 subplot-uri
-    fig = plt.figure(figsize=(20, 10))
+    # Creează figura
+    fig, ax = plt.subplots(figsize=(12, 8))
     
-    # Subplot 1: Vizualizare 3D
-    ax1 = fig.add_subplot(121, projection='3d')
+    # Obține detaliile obiectivului principal
+    main_objective = get_objective_details(objective_id)
     
-    # Grupează datele pe clustere
-    clusters = {}
-    for item in data:
-        cluster_id = item['clusterId']
-        if cluster_id not in clusters:
-            clusters[cluster_id] = []
-        clusters[cluster_id].append(item)
+    # Plot pentru obiectivul principal
+    ax.scatter(main_objective['longitude'], main_objective['latitude'], 
+              c='red', s=200, label='Obiectiv Principal', marker='*')
     
-    # Culori pentru clustere
-    colors = plt.cm.viridis(np.linspace(0, 1, len(clusters)))
+    # Adaugă etichetă pentru obiectivul principal
+    ax.text(main_objective['longitude'], main_objective['latitude'], 
+            main_objective['name'], fontsize=8, ha='right')
     
-    # Plot pentru fiecare cluster
-    for cluster_id, cluster_data in clusters.items():
-        x = [d['x'] for d in cluster_data]
-        y = [d['y'] for d in cluster_data]
-        z = [d['averageRating'] for d in cluster_data]
-        sizes = [d['price'] * 10 for d in cluster_data]
+    # Plot pentru vecini
+    for neighbor in neighbors:
+        ax.scatter(neighbor['longitude'], neighbor['latitude'], 
+                  c='blue', s=100, alpha=0.6)
         
-        scatter = ax1.scatter(x, y, z, 
-                            c=[colors[cluster_id] for _ in range(len(cluster_data))],
-                            s=sizes,
-                            alpha=0.6,
-                            label=f'Cluster {cluster_id}')
+        # Adaugă etichetă pentru fiecare vecin
+        ax.text(neighbor['longitude'], neighbor['latitude'], 
+                neighbor['name'], fontsize=8, ha='right')
         
-        # Adaugă etichete pentru ID-uri
-        for point in cluster_data:
-            ax1.text(point['x'], point['y'], point['averageRating'],
-                    str(point['id']),
-                    fontsize=8)
+        # Adaugă linie între obiectivul principal și vecin
+        ax.plot([main_objective['longitude'], neighbor['longitude']],
+                [main_objective['latitude'], neighbor['latitude']],
+                'k--', alpha=0.3)
     
-    ax1.set_title('Clustering în Spațiu 3D\n(X: Longitudine, Y: Latitudine, Z: Rating)')
-    ax1.set_xlabel('Longitudine')
-    ax1.set_ylabel('Latitudine')
-    ax1.set_zlabel('Rating Mediu')
+    # Setează titlul și etichetele
+    ax.set_title(f'Vecinii obiectivului {main_objective["name"]}')
+    ax.set_xlabel('Longitudine')
+    ax.set_ylabel('Latitudine')
     
     # Adaugă legenda
-    ax1.legend()
-    
-    # Subplot 2: Distribuția proprietăților pe clustere
-    ax2 = fig.add_subplot(122)
-    
-    # Pregătește datele pentru boxplot
-    cluster_data = {cluster_id: {
-        'rating': [d['averageRating'] for d in cluster],
-        'price': [d['price'] for d in cluster]
-    } for cluster_id, cluster in clusters.items()}
-    
-    # Creează boxplot-uri pentru rating și preț
-    boxplot_data = []
-    labels = []
-    for cluster_id in clusters.keys():
-        boxplot_data.extend([cluster_data[cluster_id]['rating'], cluster_data[cluster_id]['price']])
-        labels.extend([f'Cluster {cluster_id}\nRating', f'Cluster {cluster_id}\nPreț'])
-    
-    ax2.boxplot(boxplot_data, labels=labels)
-    ax2.set_title('Distribuția Rating-ului și Prețului pe Clustere')
-    ax2.set_ylabel('Valoare')
-    plt.xticks(rotation=45)
+    ax.legend()
     
     # Ajustează layout-ul
     plt.tight_layout()
     
     # Salvează figura
-    plt.savefig('clustering_analysis.png', dpi=300, bbox_inches='tight')
-    print("\nFigura a fost salvată ca 'clustering_analysis.png'")
+    plt.savefig(f'neighbors_{objective_id}.png', dpi=300, bbox_inches='tight')
+    print(f"\nFigura a fost salvată ca 'neighbors_{objective_id}.png'")
     
-    # Afișează statistici detaliate pentru fiecare cluster
-    print("\nStatistici detaliate per cluster:")
-    for cluster_id, cluster in clusters.items():
-        print(f"\nCluster {cluster_id}:")
-        print(f"Număr de obiective: {len(cluster)}")
-        print(f"Rating mediu: {np.mean([d['averageRating'] for d in cluster]):.2f}")
-        print(f"Preț mediu: {np.mean([d['price'] for d in cluster]):.2f}")
-        print(f"Tipuri de obiective: {set(d['typeName'] for d in cluster)}")
-        
-        # Afișează distribuția geografică
-        x_coords = [d['x'] for d in cluster]
-        y_coords = [d['y'] for d in cluster]
-        print(f"Zonă geografică: X({min(x_coords):.2f} - {max(x_coords):.2f}), Y({min(y_coords):.2f} - {max(y_coords):.2f})")
+    # Afișează statistici despre vecini
+    print("\nStatistici despre vecini:")
+    print(f"Număr total de vecini: {len(neighbors)}")
+    print("\nDetalii despre vecini:")
+    for neighbor in neighbors:
+        print(f"\nNume: {neighbor['name']}")
+        print(f"Distanță: {neighbor['distance']:.2f} km")
+        print(f"Rating mediu: {neighbor['averageRating']:.2f}" if neighbor['averageRating'] else "Rating: N/A")
 
-try:
-    # Obține datele de la API
-    data = get_data_from_api()
-    
-    if not data:
-        print("Nu s-au primit date de la API")
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Utilizare: python pot.py <objective_id>")
         sys.exit(1)
+    
+    objective_id = int(sys.argv[1])
+    
+    try:
+        # Obține vecinii de la API
+        neighbors = get_neighbors_from_api(objective_id)
+        
+        if not neighbors:
+            print("Nu s-au găsit vecini pentru acest obiectiv")
+            sys.exit(1)
 
-    # Creează vizualizarea
-    create_visualization(data)
+        # Creează vizualizarea
+        create_neighbors_visualization(objective_id, neighbors)
 
-except Exception as e:
-    print(f"Eroare la generarea figurii: {e}")
-    import traceback
-    traceback.print_exc()
-    sys.exit(1) 
+    except Exception as e:
+        print(f"Eroare la generarea figurii: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1) 

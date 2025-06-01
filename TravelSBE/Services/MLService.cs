@@ -1,12 +1,8 @@
-using Microsoft.ML;
-using Microsoft.ML.Trainers;
-using TravelSBE.Data;
-using TravelSBE.Models.ML;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
+using TravelSBE.Data;
 using TravelSBE.Entity;
 using TravelSBE.Utils;
-using System.Collections.Generic;
 
 namespace TravelSBE.Services
 {
@@ -17,6 +13,7 @@ namespace TravelSBE.Services
         Task<ServiceResult<List<ObjectiveVisualizationDto>>> GetObjectivesForVisualizationAsync();
         Task UpdateClusterNeighborsAsync();
         Task<ServiceResult<List<RecommendedObjectiveDto>>> GetNearestNeighborsAsync(int objectiveId, int count = 4);
+        Task<ServiceResult<ClusterAnalysisDto>> GetClusterAnalysisAsync();
     }
 
     public class MLService : IMLService
@@ -108,18 +105,18 @@ namespace TravelSBE.Services
             var minType = typeValues.Min();
             var maxType = typeValues.Max();
 
-            // Verifică dacă avem valori diferite pentru fiecare proprietate
+            // verific max min
             if (maxX == minX) maxX = minX + 1;
             if (maxY == minY) maxY = minY + 1;
             if (maxRating == minRating) maxRating = minRating + 1;
             if (maxPrice == minPrice) maxPrice = minPrice + 1;
             if (maxType == minType) maxType = minType + 1;
 
-            // Aplică ponderi diferite pentru fiecare proprietate
-            const double locationWeight = 0.6;    // 60% pentru locație
-            const double ratingWeight = 0.1;      // 10% pentru rating
-            const double priceWeight = 0.1;       // 10% pentru preț
-            const double typeWeight = 0.2;        // 20% pentru tip
+            // ponderi
+            const double locationWeight = 0.6;   
+            const double ratingWeight = 0.1;     
+            const double priceWeight = 0.1;       
+            const double typeWeight = 0.2;        
 
             foreach (var point in points)
             {
@@ -140,40 +137,9 @@ namespace TravelSBE.Services
             var centroids = new List<(double x, double y, double rating, double price, double type)>();
             var random = new Random();
 
-            // Inițializează centroizii folosind metoda k-means++
-            centroids.Add(points[random.Next(points.Count)]); // Primul centroid aleatoriu
-
-            for (int i = 1; i < K; i++)
+            for (int i = 0; i < K; i++)
             {
-                var distances = new List<double>();
-                foreach (var point in points)
-                {
-                    var minDistance = double.MaxValue;
-                    foreach (var centroid in centroids)
-                    {
-                        var distance = CalculateDistance(point, centroid);
-                        minDistance = Math.Min(minDistance, distance);
-                    }
-                    distances.Add(minDistance);
-                }
-
-                // Alege următorul centroid cu probabilitate proporțională cu distanța pătrată
-                var sumSquaredDistances = distances.Sum(d => d * d);
-                var randomValue = random.NextDouble() * sumSquaredDistances;
-                var cumulativeSum = 0.0;
-                var selectedIndex = 0;
-
-                for (int j = 0; j < distances.Count; j++)
-                {
-                    cumulativeSum += distances[j] * distances[j];
-                    if (cumulativeSum >= randomValue)
-                    {
-                        selectedIndex = j;
-                        break;
-                    }
-                }
-
-                centroids.Add(points[selectedIndex]);
+                centroids.Add(points[random.Next(points.Count)]);
             }
 
             var clusters = new List<int>();
@@ -228,7 +194,7 @@ namespace TravelSBE.Services
             if (clusters1.Count != clusters2.Count) return false;
             return !clusters1.Where((t, i) => t != clusters2[i]).Any();
         }
-
+        //euclidiana
         private double CalculateDistance((double x, double y, double rating, double price, double type) p1, (double x, double y, double rating, double price, double type) p2)
         {
             return Math.Sqrt(
@@ -391,6 +357,164 @@ namespace TravelSBE.Services
             result.Result = recommendedObjectives;
             return result;
         }
+
+        public async Task<ServiceResult<ClusterAnalysisDto>> GetClusterAnalysisAsync()
+        {
+            var result = new ServiceResult<ClusterAnalysisDto>();
+            
+            //var objectives = await _context.Objectives
+            //    .Include(o => o.Reviews)
+            //    .Include(o => o.ObjectiveType)
+            //    .Where(o => o.ClusterId.HasValue)
+            //    .ToListAsync();
+
+            //var silhouetteScores = CalculateSilhouetteScores(objectives);
+            //var clusterStats = CalculateClusterStatistics(objectives);
+            //var similarityMatrix = CalculateClusterSimilarityMatrix(objectives);
+
+            //// Convertim matricea 2D într-o listă de liste pentru serializare
+            //var serializableMatrix = new List<List<double>>();
+            //for (int i = 0; i < similarityMatrix.GetLength(0); i++)
+            //{
+            //    var row = new List<double>();
+            //    for (int j = 0; j < similarityMatrix.GetLength(1); j++)
+            //    {
+            //        row.Add(similarityMatrix[i, j]);
+            //    }
+            //    serializableMatrix.Add(row);
+            //}
+
+            //result.Result = new ClusterAnalysisDto
+            //{
+            //    SilhouetteScores = silhouetteScores,
+            //    ClusterStatistics = clusterStats,
+            //    SimilarityMatrix = serializableMatrix
+            //};
+
+            return result;
+        }
+
+        private List<SilhouetteScoreDto> CalculateSilhouetteScores(List<Objective> objectives)
+        {
+            var scores = new List<SilhouetteScoreDto>();
+            //var clusters = objectives.GroupBy(o => o.ClusterId.Value).ToList();
+
+            //foreach (var cluster in clusters)
+            //{
+            //    var clusterObjectives = cluster.ToList();
+            //    var clusterScore = 0.0;
+
+            //    foreach (var objective in clusterObjectives)
+            //    {
+            //        var a = CalculateAverageDistance(objective, clusterObjectives.Where(o => o.Id != objective.Id));
+            //        var b = double.MaxValue;
+
+            //        foreach (var otherCluster in clusters.Where(c => c.Key != cluster.Key))
+            //        {
+            //            var distance = CalculateAverageDistance(objective, otherCluster);
+            //            b = Math.Min(b, distance);
+            //        }
+
+            //        var score = (b - a) / Math.Max(a, b);
+            //        clusterScore += score;
+            //    }
+
+            //    scores.Add(new SilhouetteScoreDto
+            //    {
+            //        ClusterId = cluster.Key,
+            //        Score = clusterScore / clusterObjectives.Count,
+            //        ObjectiveCount = clusterObjectives.Count
+            //    });
+            //}
+
+            return scores;
+        }
+
+        private List<ClusterStatisticsDto> CalculateClusterStatistics(List<Objective> objectives)
+        {
+            var stats = new List<ClusterStatisticsDto>();
+            //var clusters = objectives.GroupBy(o => o.ClusterId.Value);
+
+            //foreach (var cluster in clusters)
+            //{
+            //    var clusterObjectives = cluster.ToList();
+            //    var avgRating = clusterObjectives.Average(o => o.Reviews.Any() ? o.Reviews.Average(r => r.Raiting) : 0);
+            //    var avgPrice = clusterObjectives.Average(o => !string.IsNullOrEmpty(o.Pret) ? double.Parse(o.Pret) : 0);
+            //    var typeDistribution = clusterObjectives
+            //        .GroupBy(o => o.ObjectiveType?.Name ?? "Necunoscut")
+            //        .ToDictionary(g => g.Key, g => g.Count());
+
+            //    stats.Add(new ClusterStatisticsDto
+            //    {
+            //        ClusterId = cluster.Key,
+            //        AverageRating = avgRating,
+            //        AveragePrice = avgPrice,
+            //        TypeDistribution = typeDistribution,
+            //        ObjectiveCount = clusterObjectives.Count
+            //    });
+            //}
+
+            return stats;
+        }
+
+        private double[,] CalculateClusterSimilarityMatrix(List<Objective> objectives)
+        {
+            var clusters = objectives.GroupBy(o => o.ClusterId.Value).ToList();
+            var matrix = new double[clusters.Count, clusters.Count];
+
+            //for (int i = 0; i < clusters.Count; i++)
+            //{
+            //    for (int j = 0; j < clusters.Count; j++)
+            //    {
+            //        if (i == j)
+            //        {
+            //            matrix[i, j] = 1.0;
+            //            continue;
+            //        }
+
+            //        var similarity = CalculateClusterSimilarity(clusters[i].ToList(), clusters[j].ToList());
+            //        matrix[i, j] = similarity;
+            //    }
+            //}
+
+            return matrix;
+        }
+
+        private double CalculateClusterSimilarity(List<Objective> cluster1, List<Objective> cluster2)
+        {
+            var totalSimilarity = 0.0;
+            var count = 0;
+
+            foreach (var obj1 in cluster1)
+            {
+                foreach (var obj2 in cluster2)
+                {
+                    totalSimilarity += CalculateSimilarityScore(obj1, obj2);
+                    count++;
+                }
+            }
+
+            return count > 0 ? totalSimilarity / count : 0;
+        }
+
+        private double CalculateAverageDistance(Objective objective, IEnumerable<Objective> otherObjectives)
+        {
+            if (!otherObjectives.Any()) return 0;
+
+            var totalDistance = 0.0;
+            var count = 0;
+
+            foreach (var other in otherObjectives)
+            {
+                if (objective.Location != null && other.Location != null)
+                {
+                    totalDistance += objective.Location.Distance(other.Location) * 111000; // în metri
+                    count++;
+                }
+            }
+
+            return count > 0 ? totalDistance / count : 0;
+        }
     }
 
     public class RecommendedObjectiveDto
@@ -414,5 +538,28 @@ namespace TravelSBE.Services
         public double AverageRating { get; set; }
         public double Price { get; set; }
         public string TypeName { get; set; }
+    }
+
+    public class ClusterAnalysisDto
+    {
+        public List<SilhouetteScoreDto> SilhouetteScores { get; set; }
+        public List<ClusterStatisticsDto> ClusterStatistics { get; set; }
+        public List<List<double>> SimilarityMatrix { get; set; }
+    }
+
+    public class SilhouetteScoreDto
+    {
+        public int ClusterId { get; set; }
+        public double Score { get; set; }
+        public int ObjectiveCount { get; set; }
+    }
+
+    public class ClusterStatisticsDto
+    {
+        public int ClusterId { get; set; }
+        public double AverageRating { get; set; }
+        public double AveragePrice { get; set; }
+        public Dictionary<string, int> TypeDistribution { get; set; }
+        public int ObjectiveCount { get; set; }
     }
 }

@@ -21,7 +21,7 @@ namespace TravelSBE
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowFrontend", policy =>
-                    policy.WithOrigins("http://localhost:5173")
+                    policy.WithOrigins("http://localhost:5173", "https://travel-s.vercel.app")
                           .AllowAnyMethod()
                           .AllowAnyHeader()
                           .AllowCredentials());
@@ -136,7 +136,7 @@ namespace TravelSBE
                 FileProvider = new PhysicalFileProvider(
                     Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "images")),
                 RequestPath = "",
-                EnableDirectoryBrowsing = false
+                EnableDirectoryBrowsing = true
             });
 
             app.UseAuthorization();
