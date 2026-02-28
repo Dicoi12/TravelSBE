@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using TravelsBE.Dtos;
 using TravelSBE.Dtos;
 using TravelSBE.Models;
 using TravelSBE.Services.Interfaces;
@@ -17,7 +18,7 @@ namespace TravelSBE.Controllers
         }
 
         [HttpPost("Login")]
-        public async Task<UserModel> Login([FromBody] LoginDto loginDto)
+        public async Task<TokenResponse> Login([FromBody] LoginDto loginDto)
         {
             return await _userService.Login(loginDto.UserName, loginDto.Password);
         }

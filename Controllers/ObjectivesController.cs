@@ -1,7 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using TravelsBE.Dtos;
 using TravelsBE.Models;
 using TravelsBE.Models.Filters;
 using TravelSBE.Entity;
@@ -47,7 +44,6 @@ namespace TravelSBE.Controllers
 
         [HttpGet("{id}")]
         public async Task<ServiceResult<ObjectiveModel>> GetObjectiveByIdAsync(int id)
-
         {
             var objective = await _objectiveService.GetObjectiveByIdAsync(id);
 

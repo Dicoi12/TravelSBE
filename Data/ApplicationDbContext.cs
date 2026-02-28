@@ -65,7 +65,7 @@ public class ApplicationDbContext : DbContext
         builder.Entity<Experience>()
             .HasMany(e => e.Images)
             .WithOne(e => e.Experience)
-            .HasForeignKey(e => e.IdExperienta).OnDelete(DeleteBehavior.Cascade); 
+            .HasForeignKey(e => e.IdExperienta).OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<ObjectiveSchedule>()
             .Property(s => s.DayOfWeek)

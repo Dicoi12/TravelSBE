@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using TravelSBE.Services;
 using TravelSBE.Entity;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 using TravelSBE.Models;
 
 namespace TravelSBE.Controllers

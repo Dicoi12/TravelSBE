@@ -19,7 +19,6 @@ namespace TravelSBE.Services
     public class MLService : IMLService
     {
         private readonly ApplicationDbContext _context;
-        private readonly IConfiguration _configuration;
         private const int K = 5;
         private const int MAX_ITERATIONS = 100;
         private readonly Point _referencePoint;
@@ -34,10 +33,9 @@ namespace TravelSBE.Services
             public int TypeId { get; set; }
         }
 
-        public MLService(ApplicationDbContext context, IConfiguration configuration)
+        public MLService(ApplicationDbContext context)
         {
             _context = context;
-            _configuration = configuration;
             _referencePoint = new Point(26.1025, 44.4268) { SRID = 4326 };
         }
 
@@ -148,7 +146,7 @@ namespace TravelSBE.Services
 
             do
             {
-                oldClusters = new List<int>(clusters);
+                oldClusters = clusters;
                 clusters.Clear();
 
                 foreach (var point in points)

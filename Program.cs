@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TravelSBE.Data;
 using TravelSBE.Services;
-using Microsoft.OpenApi.Models;
 using TravelSBE.Services.Interfaces;
 using Microsoft.AspNetCore.Http.Features;
 using TravelSBE.Mapper;
@@ -21,10 +20,9 @@ namespace TravelSBE
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowFrontend", policy =>
-                    policy.WithOrigins("http://localhost:5173", "https://travel-s.vercel.app")
+                    policy.AllowAnyOrigin()
                           .AllowAnyMethod()
-                          .AllowAnyHeader()
-                          .AllowCredentials());
+                          .AllowAnyHeader());
             });
 
             builder.Services.AddControllers()
@@ -42,10 +40,9 @@ namespace TravelSBE
 
             builder.WebHost.ConfigureKestrel(options =>
             {
-                options.ListenAnyIP(7100, listenOptions => listenOptions.UseHttps());
-                options.ListenAnyIP(5094); // HTTP
-                options.ListenAnyIP(5001, listenOptions => listenOptions.UseHttps());
+                options.ListenAnyIP(7100); // ascultă pe toate interfețele
             });
+
 
             builder.Services.Configure<FormOptions>(options =>
             {
@@ -66,6 +63,10 @@ namespace TravelSBE
             builder.Services.AddScoped<IMLService, MLService>();
             builder.Services.AddHttpClient<ItineraryService>();
 
+            builder.Services.AddEndpointsApiExplorer();
+            //builder.Services.AddSwaggerGen();
+
+
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
@@ -85,8 +86,8 @@ namespace TravelSBE
                 if (defaultObjectivesResult.Result)
                 {
                     // Reantrenează modelul după adăugarea obiectivelor implicite
-                    //await mlService.TrainModelAsync();
-                    //await mlService.UpdateClusterNeighborsAsync();
+                    await mlService.TrainModelAsync();
+                    await mlService.UpdateClusterNeighborsAsync();
                 }
 
                 var users = await dbContext.Users.ToListAsync();
@@ -118,7 +119,7 @@ namespace TravelSBE
 
                 await dbContext.SaveChangesAsync();
             }
-                
+
 
             if (app.Environment.IsDevelopment())
             {
@@ -142,6 +143,11 @@ namespace TravelSBE
             app.UseAuthorization();
 
             app.MapControllers();
+            //if (app.Environment.IsDevelopment())
+            //{
+            //    app.UseSwagger();
+            //    app.UseSwaggerUI();
+            //}
 
             await app.RunAsync();
         }
