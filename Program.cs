@@ -8,6 +8,7 @@ using TravelsBE.Services;
 using TravelsBE.Services.Interfaces;
 using Microsoft.Extensions.FileProviders;
 using TravelSBE.Entity;
+using TravelSBE.Services.Extensions;
 
 namespace TravelSBE
 {
@@ -65,6 +66,9 @@ namespace TravelSBE
 
             builder.Services.AddEndpointsApiExplorer();
             //builder.Services.AddSwaggerGen();
+
+            // Add application services registration
+            builder.Services.AddApplicationServices();
 
 
             var app = builder.Build();

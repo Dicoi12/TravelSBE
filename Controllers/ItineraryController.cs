@@ -35,10 +35,10 @@ namespace TravelSBE.Controllers
             return await _service.UpdateItineraryAsync(itineraryDto);
         }
 
-        [HttpGet("user/{userId}")]
-        public async Task<ServiceResult<List<ItineraryPageDTO>>> GetByUserId(int userId)
+        [HttpGet("me")]
+        public async Task<ServiceResult<List<ItineraryPageDTO>>> GetByCurrentUser()
         {
-            return await _service.GetByUserId(userId);
+            return await _service.GetByCurrentUser();
         }
         [HttpGet("{id}")]
         public async Task<ServiceResult<ItineraryPageDTO>> GetByIdAsync(int id)

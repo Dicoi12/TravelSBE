@@ -4,16 +4,19 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TravelSBE.Models;
+using TravelsBE.Services.Interfaces;
 
 namespace TravelSBE.Services
 {
     public class ReviewService : IReviewService
     {
         private readonly ApplicationDbContext _context;
+        private readonly ICurrentUserService _currentUserService;
 
-        public ReviewService(ApplicationDbContext context)
+        public ReviewService(ApplicationDbContext context, ICurrentUserService currentUserService)
         {
             _context = context;
+            _currentUserService = currentUserService;
         }
 
         public async Task<IEnumerable<Review>> GetReviewsByObjectiveId(int objectiveId)
@@ -27,13 +30,17 @@ namespace TravelSBE.Services
 
         public async Task<Review> AddReview(ReviewModel reviewDto)
         {
+            var userId = _currentUserService.UserId ?? reviewDto.IdUser;
+
             var review = new Review
             {
-                IdUser = reviewDto.IdUser,
+                IdUser = userId,
                 IdObjective = (int)reviewDto.IdObjective,
                 Raiting = reviewDto.Raiting,
                 Comment = reviewDto.Comment,
-                DatePosted = reviewDto.DatePosted ?? DateTime.UtcNow
+                DatePosted = reviewDto.DatePosted ?? DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
             _context.Reviews.Add(review);

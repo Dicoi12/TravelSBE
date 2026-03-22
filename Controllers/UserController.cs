@@ -29,9 +29,15 @@ namespace TravelSBE.Controllers
             return await _userService.SignUp(request);
         }
         [HttpPost("ChangePassword")]
-        public async Task<bool> ChangePassword(int userId, string oldPassword, string newPassword)
+        public async Task<bool> ChangePassword(string oldPassword, string newPassword)
         {
-            return await _userService.ChangePassword(userId, oldPassword, newPassword);
+            return await _userService.ChangePassword(oldPassword, newPassword);
+        }
+
+        [HttpGet("GetUserData")]
+        public async Task<UserModel> GetUserData()
+        {
+            return await _userService.GetUserData();
         }
     }
 }

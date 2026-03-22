@@ -13,22 +13,26 @@ namespace TravelSBE.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly TravelsBE.Services.Interfaces.ICurrentUserService _currentUserService;
 
-        public ItineraryService(ApplicationDbContext context, IMapper mapper)
+        public ItineraryService(ApplicationDbContext context, IMapper mapper, TravelsBE.Services.Interfaces.ICurrentUserService currentUserService)
         {
             _context = context;
             _mapper = mapper;
+            _currentUserService = currentUserService;
         }
 
         public async Task<ServiceResult<Itinerary>> AddItineraryAsync(ItineraryDTO itineraryDto)
         {
             var result = new ServiceResult<Itinerary>();
 
+            var currentUserId = _currentUserService.UserId;
+
             var itinerary = new Itinerary
             {
                 Name = itineraryDto.Name,
                 Description = itineraryDto.Description,
-                IdUser = itineraryDto.IdUser,
+                IdUser = currentUserId ?? itineraryDto.IdUser,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 DataStart = itineraryDto.DataStart,
@@ -86,9 +90,19 @@ namespace TravelSBE.Services
                 return result;
             }
 
+            var currentUserId = _currentUserService.UserId;
+            // only owner (or unassigned) can update
+            if (itinerary.IdUser != null && currentUserId != null && itinerary.IdUser != currentUserId)
+            {
+                result.ValidationMessage = "Unauthorized to update this itinerary.";
+                result.IsSuccessful = false;
+                return result;
+            }
+
             itinerary.Name = itineraryDto.Name;
             itinerary.Description = itineraryDto.Description;
-            itinerary.IdUser = itineraryDto.IdUser;
+            // prefer current user as owner if available
+            itinerary.IdUser = currentUserId ?? itineraryDto.IdUser ?? itinerary.IdUser;
             itinerary.UpdatedAt = DateTime.UtcNow;
             itinerary.DataStart = itineraryDto.DataStart;
             itinerary.DataStop = itineraryDto.DataStop;
@@ -121,6 +135,14 @@ namespace TravelSBE.Services
                 return result;
             }
 
+            var currentUserId = _currentUserService.UserId;
+            if (itinerary.IdUser != null && currentUserId != null && itinerary.IdUser != currentUserId)
+            {
+                result.ValidationMessage = "Unauthorized to delete this itinerary.";
+                result.IsSuccessful = false;
+                return result;
+            }
+
             // Ștergem mai întâi detaliile
             _context.ItineraryDetails.RemoveRange(itinerary.ItineraryDetails);
             await _context.SaveChangesAsync();
@@ -142,41 +164,6 @@ namespace TravelSBE.Services
                 return result;
             }
         }
-
-        public async Task<ServiceResult<bool>> DeleteItineraryByUser(int id, int userId)
-        {
-            var result = new ServiceResult<bool>();
-            var itinerary = await _context.Itineraries
-                .Include(i => i.ItineraryDetails)
-                .FirstOrDefaultAsync(i => i.Id == id && i.IdUser == userId);
-
-            if (itinerary == null)
-            {
-                result.ValidationMessage = "Itinerary not found";
-                return result;
-            }
-
-            // Ștergem mai întâi detaliile
-            _context.ItineraryDetails.RemoveRange(itinerary.ItineraryDetails);
-            await _context.SaveChangesAsync();
-
-            // Apoi ștergem itinerariul
-            _context.Itineraries.Remove(itinerary);
-
-            try
-            {
-                await _context.SaveChangesAsync();
-                result.IsSuccessful = true;
-                result.Result = true;
-                return result;
-            }
-            catch (Exception ex)
-            {
-                result.ValidationMessage = ex.Message;
-                return result;
-            }
-        }
-
 
         public async Task<ServiceResult<List<ItineraryPageDTO>>> GetAllAsync()
         {
@@ -231,9 +218,12 @@ namespace TravelSBE.Services
 
 
 
-        public async Task<ServiceResult<List<ItineraryPageDTO>>> GetByUserId(int userId)
+        public async Task<ServiceResult<List<ItineraryPageDTO>>> GetByCurrentUser()
         {
             var result = new ServiceResult<List<ItineraryPageDTO>>();
+
+            var currentUserId = _currentUserService.UserId;
+
             var itineraries = await _context.Itineraries
                 .Include(i => i.ItineraryDetails)
                     .ThenInclude(i => i.Objective)
@@ -241,7 +231,7 @@ namespace TravelSBE.Services
                 .Include(i => i.ItineraryDetails)
                     .ThenInclude(i => i.Event)
                         .ThenInclude(e => e.Images)
-                .Where(i => i.IdUser == userId || i.IdUser == null)
+                .Where(i => i.IdUser == currentUserId || i.IdUser == null)
                 .ToListAsync();
 
             var itineraryPageDTOs = itineraries.Select(itinerary => new ItineraryPageDTO

@@ -4,5 +4,8 @@
     {
         int? UserId { get; }
         string? Email { get; }
+
+        int? GetUserIdOrNull();
+        int GetUserIdOrThrow();
     }
 }
