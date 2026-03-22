@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -11,11 +12,9 @@ using TravelSBE.Entity;
 using TravelSBE.Models;
 using TravelSBE.Services.Interfaces;
 using TravelSBE.Utils;
-using System.Security.AccessControl;
 using TravelsBE.Models.Filters;
 using NetTopologySuite.Geometries;
 using TravelsBE.Models;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace TravelSBE.Services
 {
@@ -25,26 +24,31 @@ namespace TravelSBE.Services
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<ObjectiveService> _logger;
         private readonly string _baseUrl;
 
-        public ObjectiveService(ApplicationDbContext context, IMapper mapper, IConfiguration configuration, HttpClient httpClient)
+        public ObjectiveService(ApplicationDbContext context, IMapper mapper, IConfiguration configuration, HttpClient httpClient, ILogger<ObjectiveService> logger)
         {
             _context = context;
             _mapper = mapper;
-            _baseUrl = configuration["BaseUrl"];
+            _configuration = configuration;
+            _baseUrl = configuration["BaseUrl"] ?? string.Empty;
             _httpClient = httpClient;
+            _logger = logger;
         }
 
 
-        public async Task<ServiceResult<List<ObjectiveModel>>> GetObjectivesAsync(string? search)
+        public async Task<ServiceResult<PagedResult<ObjectiveModel>>> GetObjectivesAsync(string? search, int page = 1, int pageSize = 20)
         {
-            var result = new ServiceResult<List<ObjectiveModel>>();
+            var result = new ServiceResult<PagedResult<ObjectiveModel>>();
+
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 1, 100);
 
             var query = _context.Objectives
                 .AsNoTracking()
                 .Include(x => x.ObjectiveType)
                 .Include(x => x.Images)
-                //.Include(x => x.Reviews)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -52,23 +56,25 @@ namespace TravelSBE.Services
                 query = query.Where(x => x.Name.ToLower().Contains(search.ToLower()));
             }
 
-            var list = await query.ToListAsync();
+            var totalCount = await query.CountAsync();
+            var list = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
             var objectiveModels = _mapper.Map<List<ObjectiveModel>>(list);
 
             foreach (var model in objectiveModels)
             {
                 var originalObjective = list.First(x => x.Id == model.Id);
-
                 model.Images = originalObjective.Images
                     .Select(img => $"{_baseUrl}{img.FilePath}")
                     .ToList();
-
-                //model.MedieReview = originalObjective.Reviews.Any() 
-                //    ? (int)Math.Round(originalObjective.Reviews.Average(r => r.Raiting))
-                //    : null;
             }
 
-            result.Result = objectiveModels;
+            result.Result = new PagedResult<ObjectiveModel>
+            {
+                Items = objectiveModels,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
             return result;
         }
 

@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using TravelsBE.Dtos;
 using TravelSBE.Data;
 using TravelSBE.Entity;
 using TravelSBE.Models;
@@ -18,58 +18,61 @@ public class UserService : IUserService
     private readonly ApplicationDbContext _context;
     private readonly IMapper _mapper;
     private readonly IConfiguration _config;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly ILogger<UserService> _logger;
 
-    public UserService(ApplicationDbContext context, IMapper mapper, IConfiguration configuration, ICurrentUserService currentUserService)
+    public UserService(ApplicationDbContext context, IMapper mapper, IConfiguration configuration, ILogger<UserService> logger)
     {
         _context = context;
         _mapper = mapper;
         _config = configuration;
-        _currentUserService = currentUserService;
+        _logger = logger;
     }
 
     public async Task<bool> SignUp(CreateUser request)
     {
         if (await _context.Users.AnyAsync(u => u.UserName == request.UserName))
         {
+            _logger.LogWarning("Sign-up failed: username '{UserName}' already exists.", request.UserName);
             return false;
         }
 
         string salt = PasswordHelper.CreateSalt();
         string hash = PasswordHelper.HashPassword(request.Password, salt);
 
-        User user = new User
+        var user = new User
         {
             Email = request.Email,
             UserName = request.UserName,
+            Salt = salt,
+            Hash = hash
         };
-        user.Salt = salt;
-        user.Hash = hash;
 
         await _context.Users.AddAsync(user);
         await _context.SaveChangesAsync();
 
+        _logger.LogInformation("User '{UserName}' registered successfully.", request.UserName);
         return true;
     }
 
     public async Task<TokenResponse> Login(string username, string password)
     {
-        TokenResponse response = new TokenResponse();
+        var response = new TokenResponse();
         var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName == username);
         if (user == null)
         {
+            _logger.LogWarning("Login failed: user '{UserName}' not found.", username);
             return response;
         }
 
         bool isPasswordValid = PasswordHelper.VerifyPassword(password, user.Hash, user.Salt);
         if (isPasswordValid)
         {
+            _logger.LogInformation("User '{UserName}' logged in.", username);
             return GenerateJwtToken(user);
         }
-        else
-        {
-            return response;
-        }
+
+        _logger.LogWarning("Login failed: invalid password for user '{UserName}'.", username);
+        return response;
     }
 
     public async Task<bool> ChangePassword(string currentPassword, string newPassword)
@@ -80,23 +83,26 @@ public class UserService : IUserService
         var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId.Value);
         if (user == null)
         {
+            _logger.LogWarning("ChangePassword failed: user {UserId} not found.", userId);
             return false;
         }
+
         bool isPasswordValid = PasswordHelper.VerifyPassword(currentPassword, user.Hash, user.Salt);
-        if (isPasswordValid)
+        if (!isPasswordValid)
         {
-            string salt = PasswordHelper.CreateSalt();
-            string hash = PasswordHelper.HashPassword(newPassword, salt);
-            user.Salt = salt;
-            user.Hash = hash;
-            _context.Update(user);
-            await _context.SaveChangesAsync();
-            return true;
-        }
-        else
-        {
+            _logger.LogWarning("ChangePassword failed: invalid current password for user {UserId}.", userId);
             return false;
         }
+
+        string salt = PasswordHelper.CreateSalt();
+        string hash = PasswordHelper.HashPassword(newPassword, salt);
+        user.Salt = salt;
+        user.Hash = hash;
+        _context.Update(user);
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Password changed for user {UserId}.", userId);
+        return true;
     }
 
 

@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TravelSBE.Utils;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class ObjectiveImageController : ControllerBase
 {
     private readonly IObjectiveImageService _imageService;

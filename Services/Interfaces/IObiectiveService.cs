@@ -10,7 +10,7 @@ namespace TravelSBE.Services.Interfaces
 {
     public interface IObjectiveService
     {
-        Task<ServiceResult<List<ObjectiveModel>>> GetObjectivesAsync(string? search);
+        Task<ServiceResult<PagedResult<ObjectiveModel>>> GetObjectivesAsync(string? search, int page = 1, int pageSize = 20);
         Task<List<SimpleObjective>> GetObjectivesForModel(string? search);
         Task<ServiceResult<List<ObjectiveModel>>> GetLocalObjectives(ObjectiveFilterModel filter);
         Task<ServiceResult<ObjectiveModel>> GetObjectiveByIdAsync(int id);

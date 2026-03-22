@@ -1,10 +1,22 @@
-﻿namespace TravelSBE.Models
+using System.ComponentModel.DataAnnotations;
+
+namespace TravelSBE.Models
 {
     public class CreateUser
     {
-        public string UserName { get; set; }
-        public string Password { get; set; }
-        public string Email { get; set; }
+        [Required]
+        [StringLength(100, MinimumLength = 3)]
+        public string UserName { get; set; } = string.Empty;
+
+        [Required]
+        [MinLength(6, ErrorMessage = "Password must be at least 6 characters.")]
+        public string Password { get; set; } = string.Empty;
+
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Phone]
         public string Phone { get; set; } = string.Empty;
     }
 }
