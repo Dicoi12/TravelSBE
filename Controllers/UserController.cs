@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TravelsBE.Dtos;
 using TravelSBE.Dtos;
 using TravelSBE.Models;
 using TravelSBE.Services.Interfaces;
@@ -35,7 +36,7 @@ namespace TravelSBE.Controllers
         [HttpPost("ChangePassword")]
         public async Task<bool> ChangePassword([FromBody] ChangePasswordDto request)
         {
-            return await _userService.ChangePassword(request.UserId, request.OldPassword, request.NewPassword);
+            return await _userService.ChangePassword(request);
         }
     }
 }

@@ -1,6 +1,6 @@
-﻿using TravelSBE.Models;
-
-using TravelsBE.Dtos;
+﻿using TravelsBE.Dtos;
+using TravelSBE.Dtos;
+using TravelSBE.Models;
 
 namespace TravelSBE.Services.Interfaces
 {
@@ -8,7 +8,7 @@ namespace TravelSBE.Services.Interfaces
     {
         Task<TokenResponse> Login(string username, string password);
         Task<bool> SignUp(CreateUser request);
-        Task<bool> ChangePassword(string oldPassword, string newPassword);
+        Task<bool> ChangePassword(ChangePasswordDto change);
 
         Task<UserModel> GetUserData();
     }

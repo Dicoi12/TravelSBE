@@ -1,20 +1,15 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text.Json;
+using NetTopologySuite.Geometries;
 using System.Text;
-using System.Threading.Tasks;
+using System.Text.Json;
+using TravelsBE.Models;
+using TravelsBE.Models.Filters;
 using TravelSBE.Data;
 using TravelSBE.Entity;
 using TravelSBE.Models;
 using TravelSBE.Services.Interfaces;
 using TravelSBE.Utils;
-using TravelsBE.Models.Filters;
-using NetTopologySuite.Geometries;
-using TravelsBE.Models;
 
 namespace TravelSBE.Services
 {
@@ -26,8 +21,9 @@ namespace TravelSBE.Services
         private readonly IConfiguration _configuration;
         private readonly ILogger<ObjectiveService> _logger;
         private readonly string _baseUrl;
+        private readonly IMLService _mlService;
 
-        public ObjectiveService(ApplicationDbContext context, IMapper mapper, IConfiguration configuration, HttpClient httpClient, ILogger<ObjectiveService> logger)
+        public ObjectiveService(ApplicationDbContext context, IMapper mapper, IConfiguration configuration, HttpClient httpClient, ILogger<ObjectiveService> logger, IMLService mlService)
         {
             _context = context;
             _mapper = mapper;
@@ -35,6 +31,7 @@ namespace TravelSBE.Services
             _baseUrl = configuration["BaseUrl"] ?? string.Empty;
             _httpClient = httpClient;
             _logger = logger;
+            _mlService = mlService;
         }
 
 
@@ -199,7 +196,7 @@ namespace TravelSBE.Services
             ServiceResult<ObjectiveModel> result = new();
             if (String.IsNullOrEmpty(objective.Name) && String.IsNullOrEmpty(objective.City) && objective.Latitude == null && objective.Longitude == null)
             {
-                result.ValidationMessage = "Nu ati completat toate campurile pentru a puta adauga un obiectiv";
+                result.ValidationMessage = "Nu ati completat toate campurile pentru a putea adauga un obiectiv";
                 result.IsSuccessful = false;
                 return result;
             }
@@ -220,12 +217,9 @@ namespace TravelSBE.Services
             _context.Objectives.Add(mapped);
             await _context.SaveChangesAsync();
 
-            var mlService = _context.GetService<IMLService>();
-            if (mlService != null)
-            {
-                await mlService.TrainModelAsync();
-                await mlService.UpdateClusterNeighborsAsync();
-            }
+            await _mlService.TrainModelAsync();
+            await _mlService.UpdateClusterNeighborsAsync();
+
 
             result.Result = _mapper.Map<ObjectiveModel>(mapped);
             return result;
