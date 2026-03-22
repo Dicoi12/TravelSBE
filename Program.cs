@@ -1,17 +1,18 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Threading.RateLimiting;
+using TravelsBE.Services;
+using TravelsBE.Services.Interfaces;
 using TravelSBE.Data;
 using TravelSBE.Mapper;
 using TravelSBE.Services;
 using TravelSBE.Services.Interfaces;
-using TravelsBE.Services;
-using TravelsBE.Services.Interfaces;
-using Microsoft.AspNetCore.Http.Features;
 
 namespace TravelSBE
 {

@@ -1,15 +1,16 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using TravelsBE.Dtos;
+using TravelsBE.Services.Interfaces;
 using TravelSBE.Data;
+using TravelSBE.Dtos;
 using TravelSBE.Entity;
 using TravelSBE.Models;
 using TravelSBE.Services.Interfaces;
-using TravelsBE.Services.Interfaces;
 
 namespace TravelSBE.Services;
 
@@ -19,13 +20,15 @@ public class UserService : IUserService
     private readonly IMapper _mapper;
     private readonly IConfiguration _config;
     private readonly ILogger<UserService> _logger;
+    private readonly ICurrentUserService _currentUserService;
 
-    public UserService(ApplicationDbContext context, IMapper mapper, IConfiguration configuration, ILogger<UserService> logger)
+    public UserService(ApplicationDbContext context,ICurrentUserService currentUserService, IMapper mapper, IConfiguration configuration, ILogger<UserService> logger)
     {
         _context = context;
         _mapper = mapper;
         _config = configuration;
         _logger = logger;
+        _currentUserService = currentUserService;
     }
 
     public async Task<bool> SignUp(CreateUser request)
@@ -75,7 +78,7 @@ public class UserService : IUserService
         return response;
     }
 
-    public async Task<bool> ChangePassword(string currentPassword, string newPassword)
+    public async Task<bool> ChangePassword(ChangePasswordDto dto)
     {
         var userId = _currentUserService.UserId;
         if (userId == null) return false;
@@ -87,7 +90,7 @@ public class UserService : IUserService
             return false;
         }
 
-        bool isPasswordValid = PasswordHelper.VerifyPassword(currentPassword, user.Hash, user.Salt);
+        bool isPasswordValid = PasswordHelper.VerifyPassword(dto.OldPassword, user.Hash, user.Salt);
         if (!isPasswordValid)
         {
             _logger.LogWarning("ChangePassword failed: invalid current password for user {UserId}.", userId);
@@ -95,7 +98,7 @@ public class UserService : IUserService
         }
 
         string salt = PasswordHelper.CreateSalt();
-        string hash = PasswordHelper.HashPassword(newPassword, salt);
+        string hash = PasswordHelper.HashPassword(dto.NewPassword, salt);
         user.Salt = salt;
         user.Hash = hash;
         _context.Update(user);
