@@ -8,6 +8,8 @@ namespace TravelSBE.Services.Interfaces
     {
         Task<TokenResponse> Login(string username, string password);
         Task<bool> SignUp(CreateUser request);
-        Task<bool> ChangePassword(int userId, string oldPassword, string newPassword);
+        Task<bool> ChangePassword(string oldPassword, string newPassword);
+
+        Task<UserModel> GetUserData();
     }
 }

@@ -9,6 +9,7 @@ using TravelSBE.Data;
 using TravelSBE.Entity;
 using TravelSBE.Models;
 using TravelSBE.Services.Interfaces;
+using TravelsBE.Services.Interfaces;
 
 namespace TravelSBE.Services;
 
@@ -74,9 +75,12 @@ public class UserService : IUserService
         return response;
     }
 
-    public async Task<bool> ChangePassword(int userId, string currentPassword, string newPassword)
+    public async Task<bool> ChangePassword(string currentPassword, string newPassword)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+        var userId = _currentUserService.UserId;
+        if (userId == null) return false;
+
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId.Value);
         if (user == null)
         {
             _logger.LogWarning("ChangePassword failed: user {UserId} not found.", userId);
@@ -129,5 +133,12 @@ public class UserService : IUserService
         return response;
     }
 
+    public async Task<UserModel> GetUserData()
+    {
+        UserModel result = new UserModel();
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == _currentUserService.GetUserIdOrNull());
+        result = _mapper.Map<UserModel>(user);
+        return result;
+    }
 }
 
