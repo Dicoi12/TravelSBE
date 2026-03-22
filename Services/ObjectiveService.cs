@@ -15,6 +15,7 @@ using TravelSBE.Utils;
 using TravelsBE.Models.Filters;
 using NetTopologySuite.Geometries;
 using TravelsBE.Models;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace TravelSBE.Services
 {

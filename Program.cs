@@ -1,17 +1,16 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Threading.RateLimiting;
+using TravelsBE.Services;
+using TravelsBE.Services.Interfaces;
 using TravelSBE.Data;
 using TravelSBE.Mapper;
 using TravelSBE.Services;
 using TravelSBE.Services.Interfaces;
-using TravelsBE.Services;
-using TravelsBE.Services.Interfaces;
-using Microsoft.AspNetCore.Http.Features;
 
 namespace TravelSBE
 {
@@ -25,15 +24,26 @@ namespace TravelSBE
             var allowedOrigins = builder.Configuration
                 .GetSection("Cors:AllowedOrigins")
                 .Get<string[]>()
-                ?? new[] { "http://localhost:3000" };
+                ?? new[] { "http://localhost:5173" };
 
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowFrontend", policy =>
-                    policy.WithOrigins(allowedOrigins)
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin()
                           .AllowAnyMethod()
-                          .AllowAnyHeader());
+                          .AllowAnyHeader();
+                });
             });
+
+
+            //builder.Services.AddCors(options =>
+            //{
+            //    options.AddPolicy("AllowFrontend", policy =>
+            //        policy.WithOrigins(allowedOrigins)
+            //              .AllowAnyMethod()
+            //              .AllowAnyHeader());
+            //});
 
             // JWT Authentication
             var jwtKey = builder.Configuration["Jwt:Key"]
@@ -94,7 +104,9 @@ namespace TravelSBE
             });
 
             builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
+            builder.Services.AddHttpContextAccessor();
 
+            builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
             builder.Services.AddScoped<IObjectiveService, ObjectiveService>();
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IEventService, EventService>();
@@ -105,36 +117,37 @@ namespace TravelSBE
             builder.Services.AddScoped<IObjectiveTypeService, ObjectiveTypeService>();
             builder.Services.AddScoped<IItineraryDetailService, ItineraryDetailService>();
             builder.Services.AddScoped<IMLService, MLService>();
+
             builder.Services.AddHttpClient<ItineraryService>();
 
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "TravelSBE API", Version = "v1" });
-                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-                {
-                    Name = "Authorization",
-                    Type = SecuritySchemeType.Http,
-                    Scheme = "Bearer",
-                    BearerFormat = "JWT",
-                    In = ParameterLocation.Header,
-                    Description = "Enter your JWT token. Example: eyJhbGci..."
-                });
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
-                    {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            }
-                        },
-                        Array.Empty<string>()
-                    }
-                });
-            });
+            //builder.Services.AddSwaggerGen(c =>
+            //{
+            //    c.SwaggerDoc("v1", new OpenApiInfo { Title = "TravelSBE API", Version = "v1" });
+            //    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            //    {
+            //        Name = "Authorization",
+            //        Type = SecuritySchemeType.Http,
+            //        Scheme = "Bearer",
+            //        BearerFormat = "JWT",
+            //        In = ParameterLocation.Header,
+            //        Description = "Enter your JWT token. Example: eyJhbGci..."
+            //    });
+            //    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            //    {
+            //        {
+            //            new OpenApiSecurityScheme
+            //            {
+            //                Reference = new OpenApiReference
+            //                {
+            //                    Type = ReferenceType.SecurityScheme,
+            //                    Id = "Bearer"
+            //                }
+            //            },
+            //            Array.Empty<string>()
+            //        }
+            //    });
+            //});
 
             var app = builder.Build();
 
@@ -169,15 +182,15 @@ namespace TravelSBE
                 }
             }
 
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+            //if (app.Environment.IsDevelopment())
+            //{
+            //    app.UseSwagger();
+            //    app.UseSwaggerUI();
+            //}
 
             app.UseHttpsRedirection();
+            app.UseCors("AllowAll");
             app.UseRateLimiter();
-            app.UseCors("AllowFrontend");
 
             // Serve static files without directory browsing
             app.UseStaticFiles();
