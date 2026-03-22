@@ -1,13 +1,17 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
+using System.Threading.RateLimiting;
 using TravelSBE.Data;
+using TravelSBE.Mapper;
 using TravelSBE.Services;
 using TravelSBE.Services.Interfaces;
-using Microsoft.AspNetCore.Http.Features;
-using TravelSBE.Mapper;
 using TravelsBE.Services;
 using TravelsBE.Services.Interfaces;
-using Microsoft.Extensions.FileProviders;
-using TravelSBE.Entity;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace TravelSBE
 {
@@ -17,13 +21,41 @@ namespace TravelSBE
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // CORS — configurable from appsettings
+            var allowedOrigins = builder.Configuration
+                .GetSection("Cors:AllowedOrigins")
+                .Get<string[]>()
+                ?? new[] { "http://localhost:3000" };
+
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowFrontend", policy =>
-                    policy.AllowAnyOrigin()
+                    policy.WithOrigins(allowedOrigins)
                           .AllowAnyMethod()
                           .AllowAnyHeader());
             });
+
+            // JWT Authentication
+            var jwtKey = builder.Configuration["Jwt:Key"]
+                ?? throw new InvalidOperationException("JWT Key is not configured. Set Jwt:Key in appsettings or environment variables.");
+
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+                        ValidateIssuer = true,
+                        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                        ValidateAudience = true,
+                        ValidAudience = builder.Configuration["Jwt:Audience"],
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.Zero
+                    };
+                });
+
+            builder.Services.AddAuthorization();
 
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
@@ -36,17 +68,29 @@ namespace TravelSBE
                     builder.Configuration.GetConnectionString("DefaultConnection"),
                     x => x.UseNetTopologySuite().CommandTimeout(180)));
 
-            builder.Services.AddEndpointsApiExplorer();
-
             builder.WebHost.ConfigureKestrel(options =>
             {
-                options.ListenAnyIP(7100); // ascultă pe toate interfețele
+                options.ListenAnyIP(7100);
             });
-
 
             builder.Services.Configure<FormOptions>(options =>
             {
                 options.MultipartBodyLengthLimit = 104857600; // 100 MB
+            });
+
+            // Rate limiting: 100 requests/minute per user/IP
+            builder.Services.AddRateLimiter(options =>
+            {
+                options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: context.User?.Identity?.Name ?? context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                        factory: _ => new FixedWindowRateLimiterOptions
+                        {
+                            AutoReplenishment = true,
+                            PermitLimit = 100,
+                            Window = TimeSpan.FromMinutes(1)
+                        }));
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             });
 
             builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
@@ -64,10 +108,46 @@ namespace TravelSBE
             builder.Services.AddHttpClient<ItineraryService>();
 
             builder.Services.AddEndpointsApiExplorer();
-            //builder.Services.AddSwaggerGen();
-
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "TravelSBE API", Version = "v1" });
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "Enter your JWT token. Example: eyJhbGci..."
+                });
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
+            });
 
             var app = builder.Build();
+
+            // Global error handling
+            app.UseExceptionHandler(appBuilder =>
+            {
+                appBuilder.Run(async context =>
+                {
+                    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                    context.Response.ContentType = "application/json";
+                    await context.Response.WriteAsJsonAsync(new { error = "An unexpected error occurred." });
+                });
+            });
 
             using (var scope = app.Services.CreateScope())
             {
@@ -81,73 +161,37 @@ namespace TravelSBE
                 var objectiveService = scope.ServiceProvider.GetRequiredService<IObjectiveService>();
                 await objectiveService.UpdateMissingLocationsAsync();
 
-                // Adaugă obiective implicite dacă nu există
                 var defaultObjectivesResult = objectiveService.InsertDefaultObjectives();
                 if (defaultObjectivesResult.Result)
                 {
-                    // Reantrenează modelul după adăugarea obiectivelor implicite
                     await mlService.TrainModelAsync();
                     await mlService.UpdateClusterNeighborsAsync();
                 }
-
-                var users = await dbContext.Users.ToListAsync();
-                var objectives = await dbContext.Objectives.Include(x => x.Reviews).Where(x => x.Reviews.Count == 0).ToListAsync();
-                var random = new Random();
-                foreach (var user in users)
-                {
-                    foreach (var objective in objectives)
-                    {
-                        var existingReview = await dbContext.Reviews
-                            .FirstOrDefaultAsync(r => r.IdUser == user.Id && r.IdObjective == objective.Id);
-
-                        if (existingReview == null)
-                        {
-                            var review = new Review
-                            {
-                                IdUser = user.Id,
-                                IdObjective = objective.Id,
-                                Raiting = random.Next(2, 6),
-                                DatePosted = DateTime.UtcNow,
-                                CreatedAt = DateTime.UtcNow,
-                                UpdatedAt = DateTime.UtcNow
-                            };
-
-                            dbContext.Reviews.Add(review);
-                        }
-                    }
-                }
-
-                await dbContext.SaveChangesAsync();
             }
-
 
             if (app.Environment.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage();
+                app.UseSwagger();
+                app.UseSwaggerUI();
             }
 
             app.UseHttpsRedirection();
-
+            app.UseRateLimiter();
             app.UseCors("AllowFrontend");
 
+            // Serve static files without directory browsing
             app.UseStaticFiles();
-
-            app.UseFileServer(new FileServerOptions
+            app.UseStaticFiles(new StaticFileOptions
             {
                 FileProvider = new PhysicalFileProvider(
                     Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "images")),
-                RequestPath = "",
-                EnableDirectoryBrowsing = true
+                RequestPath = ""
             });
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
-            //if (app.Environment.IsDevelopment())
-            //{
-            //    app.UseSwagger();
-            //    app.UseSwaggerUI();
-            //}
 
             await app.RunAsync();
         }

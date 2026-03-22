@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using NetTopologySuite.Geometries;
 using TravelSBE.Data;
 using TravelSBE.Entity;
@@ -19,13 +20,24 @@ namespace TravelSBE.Services
     public class MLService : IMLService
     {
         private readonly ApplicationDbContext _context;
-        private const int K = 5;
-        private const int MAX_ITERATIONS = 100;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<MLService> _logger;
+
+        private readonly int _k;
+        private readonly int _maxIterations;
         private readonly Point _referencePoint;
+        private readonly double _locationWeight;
+        private readonly double _typeWeight;
+        private readonly double _ratingWeight;
+        private readonly double _priceWeight;
+
+        // Cache: skip training if already done in this process lifetime and data unchanged
+        private static bool _isTrained = false;
+        private static int _lastTrainedObjectiveCount = 0;
 
         private class ClusteringPoint
         {
-            public Objective Objective { get; set; }
+            public Objective Objective { get; set; } = null!;
             public double X { get; set; }
             public double Y { get; set; }
             public double AverageRating { get; set; }
@@ -33,17 +45,28 @@ namespace TravelSBE.Services
             public int TypeId { get; set; }
         }
 
-        public MLService(ApplicationDbContext context)
+        public MLService(ApplicationDbContext context, IConfiguration configuration, ILogger<MLService> logger)
         {
             _context = context;
-            _referencePoint = new Point(26.1025, 44.4268) { SRID = 4326 };
+            _configuration = configuration;
+            _logger = logger;
+
+            var ml = configuration.GetSection("MachineLearning");
+            _k = ml.GetValue<int>("K", 5);
+            _maxIterations = ml.GetValue<int>("MaxIterations", 100);
+            _locationWeight = ml.GetValue<double>("LocationWeight", 0.6);
+            _typeWeight = ml.GetValue<double>("TypeWeight", 0.2);
+            _ratingWeight = ml.GetValue<double>("RatingWeight", 0.1);
+            _priceWeight = ml.GetValue<double>("PriceWeight", 0.1);
+
+            var lon = ml.GetValue<double>("ReferencePointLongitude", 26.1025);
+            var lat = ml.GetValue<double>("ReferencePointLatitude", 44.4268);
+            _referencePoint = new Point(lon, lat) { SRID = 4326 };
         }
 
         private double CalculateDistanceFromReference(Point? location)
         {
-            if (location == null)
-                return 0;
-
+            if (location == null) return 0;
             return location.Distance(_referencePoint) * 111000;
         }
 
@@ -55,18 +78,26 @@ namespace TravelSBE.Services
                     .Include(o => o.ObjectiveType)
                     .ToListAsync();
 
+                // Skip retraining if data hasn't changed since last run
+                if (_isTrained && _lastTrainedObjectiveCount == objectives.Count)
+                {
+                    _logger.LogInformation("ML model already trained for {Count} objectives, skipping.", objectives.Count);
+                    return;
+                }
+
+                _logger.LogInformation("Training ML model with {Count} objectives, K={K}.", objectives.Count, _k);
+
                 var points = objectives.Select(o => new ClusteringPoint
                 {
                     Objective = o,
                     X = o.Location?.X ?? 0,
                     Y = o.Location?.Y ?? 0,
                     AverageRating = o.Reviews.Any() ? o.Reviews.Average(r => r.Raiting) : 0,
-                    Price = !string.IsNullOrEmpty(o.Pret) ? Int32.Parse(o.Pret) : 0,
+                    Price = !string.IsNullOrEmpty(o.Pret) && int.TryParse(o.Pret, out var p) ? p : 0,
                     TypeId = o.Type ?? 0
                 }).ToList();
 
-                var normalizedPoints = await NormalizePoints(points);
-
+                var normalizedPoints = NormalizePoints(points);
                 var clusters = ApplyKMeans(normalizedPoints);
 
                 for (int i = 0; i < objectives.Count; i++)
@@ -75,14 +106,20 @@ namespace TravelSBE.Services
                 }
 
                 await _context.SaveChangesAsync();
+
+                _isTrained = true;
+                _lastTrainedObjectiveCount = objectives.Count;
+
+                _logger.LogInformation("ML model training complete.");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error during ML model training.");
                 throw;
             }
         }
 
-        private async Task<List<(double x, double y, double rating, double price, double type)>> NormalizePoints(List<ClusteringPoint> points)
+        private List<(double x, double y, double rating, double price, double type)> NormalizePoints(List<ClusteringPoint> points)
         {
             var normalizedPoints = new List<(double x, double y, double rating, double price, double type)>();
 
@@ -92,37 +129,25 @@ namespace TravelSBE.Services
             var priceValues = points.Select(p => p.Price).ToList();
             var typeValues = points.Select(p => (double)p.TypeId).ToList();
 
-            var minX = xValues.Min();
-            var maxX = xValues.Max();
-            var minY = yValues.Min();
-            var maxY = yValues.Max();
-            var minRating = ratingValues.Min();
-            var maxRating = ratingValues.Max();
-            var minPrice = priceValues.Min();
-            var maxPrice = priceValues.Max();
-            var minType = typeValues.Min();
-            var maxType = typeValues.Max();
+            var minX = xValues.Min(); var maxX = xValues.Max();
+            var minY = yValues.Min(); var maxY = yValues.Max();
+            var minRating = ratingValues.Min(); var maxRating = ratingValues.Max();
+            var minPrice = priceValues.Min(); var maxPrice = priceValues.Max();
+            var minType = typeValues.Min(); var maxType = typeValues.Max();
 
-            // verific max min
             if (maxX == minX) maxX = minX + 1;
             if (maxY == minY) maxY = minY + 1;
             if (maxRating == minRating) maxRating = minRating + 1;
             if (maxPrice == minPrice) maxPrice = minPrice + 1;
             if (maxType == minType) maxType = minType + 1;
 
-            // ponderi
-            const double locationWeight = 0.6;   
-            const double ratingWeight = 0.1;     
-            const double priceWeight = 0.1;       
-            const double typeWeight = 0.2;        
-
             foreach (var point in points)
             {
-                var normalizedX = ((point.X - minX) / (maxX - minX)) * locationWeight;
-                var normalizedY = ((point.Y - minY) / (maxY - minY)) * locationWeight;
-                var normalizedRating = ((point.AverageRating - minRating) / (maxRating - minRating)) * ratingWeight;
-                var normalizedPrice = ((point.Price - minPrice) / (maxPrice - minPrice)) * priceWeight;
-                var normalizedType = ((point.TypeId - minType) / (maxType - minType)) * typeWeight;
+                var normalizedX = ((point.X - minX) / (maxX - minX)) * _locationWeight;
+                var normalizedY = ((point.Y - minY) / (maxY - minY)) * _locationWeight;
+                var normalizedRating = ((point.AverageRating - minRating) / (maxRating - minRating)) * _ratingWeight;
+                var normalizedPrice = ((point.Price - minPrice) / (maxPrice - minPrice)) * _priceWeight;
+                var normalizedType = ((point.TypeId - minType) / (maxType - minType)) * _typeWeight;
 
                 normalizedPoints.Add((normalizedX, normalizedY, normalizedRating, normalizedPrice, normalizedType));
             }
@@ -135,7 +160,7 @@ namespace TravelSBE.Services
             var centroids = new List<(double x, double y, double rating, double price, double type)>();
             var random = new Random();
 
-            for (int i = 0; i < K; i++)
+            for (int i = 0; i < _k; i++)
             {
                 centroids.Add(points[random.Next(points.Count)]);
             }
@@ -146,7 +171,7 @@ namespace TravelSBE.Services
 
             do
             {
-                oldClusters = clusters;
+                oldClusters = new List<int>(clusters);
                 clusters.Clear();
 
                 foreach (var point in points)
@@ -154,7 +179,7 @@ namespace TravelSBE.Services
                     var minDistance = double.MaxValue;
                     var cluster = 0;
 
-                    for (int i = 0; i < K; i++)
+                    for (int i = 0; i < _k; i++)
                     {
                         var distance = CalculateDistance(point, centroids[i]);
                         if (distance < minDistance)
@@ -166,23 +191,23 @@ namespace TravelSBE.Services
                     clusters.Add(cluster);
                 }
 
-                // Actualizează centroizii
-                for (int i = 0; i < K; i++)
+                for (int i = 0; i < _k; i++)
                 {
                     var clusterPoints = points.Where((p, index) => clusters[index] == i).ToList();
                     if (clusterPoints.Any())
                     {
-                        var newX = clusterPoints.Average(p => p.x);
-                        var newY = clusterPoints.Average(p => p.y);
-                        var newRating = clusterPoints.Average(p => p.rating);
-                        var newPrice = clusterPoints.Average(p => p.price);
-                        var newType = clusterPoints.Average(p => p.type);
-                        centroids[i] = (newX, newY, newRating, newPrice, newType);
+                        centroids[i] = (
+                            clusterPoints.Average(p => p.x),
+                            clusterPoints.Average(p => p.y),
+                            clusterPoints.Average(p => p.rating),
+                            clusterPoints.Average(p => p.price),
+                            clusterPoints.Average(p => p.type)
+                        );
                     }
                 }
 
                 iterations++;
-            } while (!AreClustersEqual(clusters, oldClusters) && iterations < MAX_ITERATIONS);
+            } while (!AreClustersEqual(clusters, oldClusters) && iterations < _maxIterations);
 
             return clusters;
         }
@@ -192,8 +217,10 @@ namespace TravelSBE.Services
             if (clusters1.Count != clusters2.Count) return false;
             return !clusters1.Where((t, i) => t != clusters2[i]).Any();
         }
-        //euclidiana
-        private double CalculateDistance((double x, double y, double rating, double price, double type) p1, (double x, double y, double rating, double price, double type) p2)
+
+        private double CalculateDistance(
+            (double x, double y, double rating, double price, double type) p1,
+            (double x, double y, double rating, double price, double type) p2)
         {
             return Math.Sqrt(
                 Math.Pow(p2.x - p1.x, 2) +
@@ -208,8 +235,7 @@ namespace TravelSBE.Services
         {
             var result = new ServiceResult<List<RecommendedObjectiveDto>>();
 
-            var objective = await _context.Objectives
-                .FirstOrDefaultAsync(o => o.Id == objectiveId);
+            var objective = await _context.Objectives.FirstOrDefaultAsync(o => o.Id == objectiveId);
 
             if (objective == null || !objective.ClusterId.HasValue || objective.Location == null)
                 return result;
@@ -224,7 +250,7 @@ namespace TravelSBE.Services
                 .Select(o => new
                 {
                     Objective = o,
-                    Distance = o.Location.Distance(objective.Location) * 111000
+                    Distance = o.Location!.Distance(objective.Location) * 111000
                 })
                 .OrderBy(x => x.Distance)
                 .Take(count)
@@ -233,12 +259,8 @@ namespace TravelSBE.Services
                     Id = x.Objective.Id,
                     Name = x.Objective.Name,
                     City = x.Objective.City,
-                    FirstImageUrl = x.Objective.Images.Any() ?
-                        ImageHelper.GetFirstImageURL(x.Objective.Images) :
-                        null,
-                    AverageRating = x.Objective.Reviews.Any() ?
-                        x.Objective.Reviews.Average(r => r.Raiting) :
-                        null,
+                    FirstImageUrl = x.Objective.Images.Any() ? ImageHelper.GetFirstImageURL(x.Objective.Images) : null,
+                    AverageRating = x.Objective.Reviews.Any() ? x.Objective.Reviews.Average(r => r.Raiting) : null,
                     Distance = x.Distance
                 })
                 .ToList();
@@ -265,9 +287,8 @@ namespace TravelSBE.Services
                 DistanceFromCenter = CalculateDistanceFromReference(o.Location),
                 ClusterId = o.ClusterId ?? -1,
                 AverageRating = o.Reviews.Any() ? o.Reviews.Average(r => r.Raiting) : 0,
-
-                Price = !string.IsNullOrEmpty(o.Pret) ? Int32.Parse(o.Pret) : 0,
-                TypeName = o.ObjectiveType?.Name ?? "Necunoscut"
+                Price = !string.IsNullOrEmpty(o.Pret) && int.TryParse(o.Pret, out var p) ? p : 0,
+                TypeName = o.ObjectiveType?.Name ?? "Unknown"
             }).ToList();
 
             result.Result = visualizationData;
@@ -276,26 +297,27 @@ namespace TravelSBE.Services
 
         private double CalculateSimilarityScore(Objective obj1, Objective obj2)
         {
-            var locationScore = 1.0 - (obj1.Location.Distance(obj2.Location) * 111000 / 100000); // Normalizat la 100km
-            var ratingScore = obj1.Reviews.Any() && obj2.Reviews.Any() 
-                ? 1.0 - Math.Abs(obj1.Reviews.Average(r => r.Raiting) - obj2.Reviews.Average(r => r.Raiting)) / 5.0 
+            var locationScore = 1.0 - (obj1.Location!.Distance(obj2.Location!) * 111000 / 100000);
+            var ratingScore = obj1.Reviews.Any() && obj2.Reviews.Any()
+                ? 1.0 - Math.Abs(obj1.Reviews.Average(r => r.Raiting) - obj2.Reviews.Average(r => r.Raiting)) / 5.0
                 : 0.5;
             var priceScore = !string.IsNullOrEmpty(obj1.Pret) && !string.IsNullOrEmpty(obj2.Pret)
                 ? 1.0 - Math.Abs(double.Parse(obj1.Pret) - double.Parse(obj2.Pret)) / 1000.0
                 : 0.5;
             var typeScore = obj1.Type == obj2.Type ? 1.0 : 0.0;
 
-            return (locationScore * 0.6) + (ratingScore * 0.1) + (priceScore * 0.1) + (typeScore * 0.2);
+            return (locationScore * _locationWeight) + (ratingScore * _ratingWeight) + (priceScore * _priceWeight) + (typeScore * _typeWeight);
         }
 
         public async Task UpdateClusterNeighborsAsync()
         {
+            _logger.LogInformation("Updating cluster neighbors.");
+
             var objectives = await _context.Objectives
                 .Include(o => o.Reviews)
                 .Where(o => o.ClusterId.HasValue && o.Location != null)
                 .ToListAsync();
 
-            // Șterge vechile relații
             _context.ClusterNeighbors.RemoveRange(_context.ClusterNeighbors);
             await _context.SaveChangesAsync();
 
@@ -305,14 +327,14 @@ namespace TravelSBE.Services
             {
                 foreach (var obj2 in objectives.Where(o => o.Id != obj1.Id && o.ClusterId == obj1.ClusterId))
                 {
-                    var distance = obj1.Location.Distance(obj2.Location) * 111000; // în metri
+                    var distance = obj1.Location!.Distance(obj2.Location!) * 111000;
                     var similarityScore = CalculateSimilarityScore(obj1, obj2);
 
                     neighbors.Add(new ClusterNeighbor
                     {
                         SourceObjectiveId = obj1.Id,
                         TargetObjectiveId = obj2.Id,
-                        ClusterId = obj1.ClusterId.Value,
+                        ClusterId = obj1.ClusterId!.Value,
                         Distance = distance,
                         SimilarityScore = similarityScore,
                         LastUpdated = DateTime.UtcNow
@@ -322,6 +344,8 @@ namespace TravelSBE.Services
 
             await _context.ClusterNeighbors.AddRangeAsync(neighbors);
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Cluster neighbors updated: {Count} records.", neighbors.Count);
         }
 
         public async Task<ServiceResult<List<RecommendedObjectiveDto>>> GetNearestNeighborsAsync(int objectiveId, int count = 4)
@@ -343,11 +367,11 @@ namespace TravelSBE.Services
                 Id = n.TargetObjective.Id,
                 Name = n.TargetObjective.Name,
                 City = n.TargetObjective.City,
-                FirstImageUrl = n.TargetObjective.Images.Any() 
-                    ? ImageHelper.GetFirstImageURL(n.TargetObjective.Images) 
+                FirstImageUrl = n.TargetObjective.Images.Any()
+                    ? ImageHelper.GetFirstImageURL(n.TargetObjective.Images)
                     : null,
-                AverageRating = n.TargetObjective.Reviews.Any() 
-                    ? n.TargetObjective.Reviews.Average(r => r.Raiting) 
+                AverageRating = n.TargetObjective.Reviews.Any()
+                    ? n.TargetObjective.Reviews.Average(r => r.Raiting)
                     : null,
                 Distance = n.Distance
             }).ToList();
@@ -358,131 +382,25 @@ namespace TravelSBE.Services
 
         public async Task<ServiceResult<ClusterAnalysisDto>> GetClusterAnalysisAsync()
         {
-            var result = new ServiceResult<ClusterAnalysisDto>();
-            
-            //var objectives = await _context.Objectives
-            //    .Include(o => o.Reviews)
-            //    .Include(o => o.ObjectiveType)
-            //    .Where(o => o.ClusterId.HasValue)
-            //    .ToListAsync();
-
-            //var silhouetteScores = CalculateSilhouetteScores(objectives);
-            //var clusterStats = CalculateClusterStatistics(objectives);
-            //var similarityMatrix = CalculateClusterSimilarityMatrix(objectives);
-
-            //// Convertim matricea 2D într-o listă de liste pentru serializare
-            //var serializableMatrix = new List<List<double>>();
-            //for (int i = 0; i < similarityMatrix.GetLength(0); i++)
-            //{
-            //    var row = new List<double>();
-            //    for (int j = 0; j < similarityMatrix.GetLength(1); j++)
-            //    {
-            //        row.Add(similarityMatrix[i, j]);
-            //    }
-            //    serializableMatrix.Add(row);
-            //}
-
-            //result.Result = new ClusterAnalysisDto
-            //{
-            //    SilhouetteScores = silhouetteScores,
-            //    ClusterStatistics = clusterStats,
-            //    SimilarityMatrix = serializableMatrix
-            //};
-
-            return result;
+            return new ServiceResult<ClusterAnalysisDto>();
         }
 
         private List<SilhouetteScoreDto> CalculateSilhouetteScores(List<Objective> objectives)
-        {
-            var scores = new List<SilhouetteScoreDto>();
-            //var clusters = objectives.GroupBy(o => o.ClusterId.Value).ToList();
-
-            //foreach (var cluster in clusters)
-            //{
-            //    var clusterObjectives = cluster.ToList();
-            //    var clusterScore = 0.0;
-
-            //    foreach (var objective in clusterObjectives)
-            //    {
-            //        var a = CalculateAverageDistance(objective, clusterObjectives.Where(o => o.Id != objective.Id));
-            //        var b = double.MaxValue;
-
-            //        foreach (var otherCluster in clusters.Where(c => c.Key != cluster.Key))
-            //        {
-            //            var distance = CalculateAverageDistance(objective, otherCluster);
-            //            b = Math.Min(b, distance);
-            //        }
-
-            //        var score = (b - a) / Math.Max(a, b);
-            //        clusterScore += score;
-            //    }
-
-            //    scores.Add(new SilhouetteScoreDto
-            //    {
-            //        ClusterId = cluster.Key,
-            //        Score = clusterScore / clusterObjectives.Count,
-            //        ObjectiveCount = clusterObjectives.Count
-            //    });
-            //}
-
-            return scores;
-        }
+            => new List<SilhouetteScoreDto>();
 
         private List<ClusterStatisticsDto> CalculateClusterStatistics(List<Objective> objectives)
-        {
-            var stats = new List<ClusterStatisticsDto>();
-            //var clusters = objectives.GroupBy(o => o.ClusterId.Value);
-
-            //foreach (var cluster in clusters)
-            //{
-            //    var clusterObjectives = cluster.ToList();
-            //    var avgRating = clusterObjectives.Average(o => o.Reviews.Any() ? o.Reviews.Average(r => r.Raiting) : 0);
-            //    var avgPrice = clusterObjectives.Average(o => !string.IsNullOrEmpty(o.Pret) ? double.Parse(o.Pret) : 0);
-            //    var typeDistribution = clusterObjectives
-            //        .GroupBy(o => o.ObjectiveType?.Name ?? "Necunoscut")
-            //        .ToDictionary(g => g.Key, g => g.Count());
-
-            //    stats.Add(new ClusterStatisticsDto
-            //    {
-            //        ClusterId = cluster.Key,
-            //        AverageRating = avgRating,
-            //        AveragePrice = avgPrice,
-            //        TypeDistribution = typeDistribution,
-            //        ObjectiveCount = clusterObjectives.Count
-            //    });
-            //}
-
-            return stats;
-        }
+            => new List<ClusterStatisticsDto>();
 
         private double[,] CalculateClusterSimilarityMatrix(List<Objective> objectives)
         {
-            var clusters = objectives.GroupBy(o => o.ClusterId.Value).ToList();
-            var matrix = new double[clusters.Count, clusters.Count];
-
-            //for (int i = 0; i < clusters.Count; i++)
-            //{
-            //    for (int j = 0; j < clusters.Count; j++)
-            //    {
-            //        if (i == j)
-            //        {
-            //            matrix[i, j] = 1.0;
-            //            continue;
-            //        }
-
-            //        var similarity = CalculateClusterSimilarity(clusters[i].ToList(), clusters[j].ToList());
-            //        matrix[i, j] = similarity;
-            //    }
-            //}
-
-            return matrix;
+            var clusters = objectives.GroupBy(o => o.ClusterId!.Value).ToList();
+            return new double[clusters.Count, clusters.Count];
         }
 
         private double CalculateClusterSimilarity(List<Objective> cluster1, List<Objective> cluster2)
         {
             var totalSimilarity = 0.0;
             var count = 0;
-
             foreach (var obj1 in cluster1)
             {
                 foreach (var obj2 in cluster2)
@@ -491,26 +409,22 @@ namespace TravelSBE.Services
                     count++;
                 }
             }
-
             return count > 0 ? totalSimilarity / count : 0;
         }
 
         private double CalculateAverageDistance(Objective objective, IEnumerable<Objective> otherObjectives)
         {
             if (!otherObjectives.Any()) return 0;
-
             var totalDistance = 0.0;
             var count = 0;
-
             foreach (var other in otherObjectives)
             {
                 if (objective.Location != null && other.Location != null)
                 {
-                    totalDistance += objective.Location.Distance(other.Location) * 111000; // în metri
+                    totalDistance += objective.Location.Distance(other.Location) * 111000;
                     count++;
                 }
             }
-
             return count > 0 ? totalDistance / count : 0;
         }
     }
@@ -518,9 +432,9 @@ namespace TravelSBE.Services
     public class RecommendedObjectiveDto
     {
         public int Id { get; set; }
-        public string Name { get; set; }
-        public string City { get; set; }
-        public string FirstImageUrl { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? City { get; set; }
+        public string? FirstImageUrl { get; set; }
         public double? AverageRating { get; set; }
         public double Distance { get; set; }
     }
@@ -528,21 +442,21 @@ namespace TravelSBE.Services
     public class ObjectiveVisualizationDto
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public double X { get; set; }
         public double Y { get; set; }
         public double DistanceFromCenter { get; set; }
         public int ClusterId { get; set; }
         public double AverageRating { get; set; }
         public double Price { get; set; }
-        public string TypeName { get; set; }
+        public string TypeName { get; set; } = string.Empty;
     }
 
     public class ClusterAnalysisDto
     {
-        public List<SilhouetteScoreDto> SilhouetteScores { get; set; }
-        public List<ClusterStatisticsDto> ClusterStatistics { get; set; }
-        public List<List<double>> SimilarityMatrix { get; set; }
+        public List<SilhouetteScoreDto> SilhouetteScores { get; set; } = new();
+        public List<ClusterStatisticsDto> ClusterStatistics { get; set; } = new();
+        public List<List<double>> SimilarityMatrix { get; set; } = new();
     }
 
     public class SilhouetteScoreDto
@@ -557,7 +471,7 @@ namespace TravelSBE.Services
         public int ClusterId { get; set; }
         public double AverageRating { get; set; }
         public double AveragePrice { get; set; }
-        public Dictionary<string, int> TypeDistribution { get; set; }
+        public Dictionary<string, int> TypeDistribution { get; set; } = new();
         public int ObjectiveCount { get; set; }
     }
 }

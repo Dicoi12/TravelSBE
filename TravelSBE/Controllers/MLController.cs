@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TravelSBE.Services;
 using TravelSBE.Models.ML;
@@ -6,6 +7,7 @@ namespace TravelSBE.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class MLController : ControllerBase
     {
         private readonly IMLService _mlService;

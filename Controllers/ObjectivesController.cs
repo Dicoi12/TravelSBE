@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TravelsBE.Models;
 using TravelsBE.Models.Filters;
 using TravelSBE.Entity;
@@ -10,6 +11,7 @@ namespace TravelSBE.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ObjectivesController : ControllerBase
     {
         private readonly IObjectiveService _objectiveService;
@@ -20,10 +22,9 @@ namespace TravelSBE.Controllers
         }
 
         [HttpGet("GetObjectivesAsync")]
-        public async Task<ServiceResult<List<ObjectiveModel>>> GetObjectivesAsync(string? search)
+        public async Task<ServiceResult<PagedResult<ObjectiveModel>>> GetObjectivesAsync(string? search, int page = 1, int pageSize = 20)
         {
-            var objectives = await _objectiveService.GetObjectivesAsync(search);
-            return objectives;
+            return await _objectiveService.GetObjectivesAsync(search, page, pageSize);
         }
         [HttpGet("GetObjectivesForModel")]
         public async Task<List<SimpleObjective>> GetObjectivesForModel(string? search)

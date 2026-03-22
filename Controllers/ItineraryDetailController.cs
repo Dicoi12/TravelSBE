@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TravelsBE.Services.Interfaces;
 using TravelSBE.Entity;
 using TravelSBE.Models;
@@ -8,6 +9,7 @@ namespace TravelSBE.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ItineraryDetailController : ControllerBase
     {
         private readonly IItineraryDetailService _service;

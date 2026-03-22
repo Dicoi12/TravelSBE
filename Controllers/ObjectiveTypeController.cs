@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TravelsBE.Entity;
 using TravelsBE.Services.Interfaces;
 
@@ -6,6 +7,7 @@ namespace TravelsBE.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ObjectiveTypeController : ControllerBase
     {
         private readonly IObjectiveTypeService _objectiveTypeService;
