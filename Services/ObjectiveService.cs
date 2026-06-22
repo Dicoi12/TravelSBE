@@ -10,10 +10,6 @@ using TravelSBE.Entity;
 using TravelSBE.Models;
 using TravelSBE.Services.Interfaces;
 using TravelSBE.Utils;
-using TravelsBE.Models.Filters;
-using NetTopologySuite.Geometries;
-using TravelsBE.Models;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace TravelSBE.Services
 {

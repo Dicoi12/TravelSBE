@@ -25,6 +25,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ObjectiveSchedule> ObjectiveSchedules { get; set; }
     public DbSet<Experience> Experiences { get; set; }
     public DbSet<ClusterNeighbor> ClusterNeighbors { get; set; }
+    public DbSet<ClusterCentroid> ClusterCentroids { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -94,6 +95,11 @@ public class ApplicationDbContext : DbContext
 
         builder.Entity<ClusterNeighbor>()
             .HasIndex(cn => cn.ClusterId);
+
+        // Configurare pentru ClusterCentroid
+        builder.Entity<ClusterCentroid>()
+            .HasIndex(cc => cc.ClusterId)
+            .IsUnique();
     }
 }
 

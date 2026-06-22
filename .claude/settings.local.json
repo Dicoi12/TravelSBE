@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:www.nuget.org)"
+      "WebFetch(domain:www.nuget.org)",
+      "Bash(find /c/Users/Winkode/Desktop/licenta/TravelSBE -type f -name *tinerary*)",
+      "Bash(dotnet build:*)",
+      "Read(//c/Users/Winkode/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/80bd6ceb-1898-4576-b250-962e0b315b31/d4b89fa1-9a2a-49e5-84ec-88e3a425d81a/skills/docx/**)",
+      "Bash(pandoc --track-changes=all \"C:\\\\Users\\\\Winkode\\\\Downloads\\\\TravelS.docx\" -o output.md)",
+      "Bash(python scripts/office/unpack.py \"C:\\\\Users\\\\Winkode\\\\Downloads\\\\TravelS.docx\" unpacked_thesis/)",
+      "Bash(pip install:*)",
+      "Bash(python -c \":*)"
     ]
   }
 }
