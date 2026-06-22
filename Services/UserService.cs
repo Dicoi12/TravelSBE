@@ -22,7 +22,7 @@ public class UserService : IUserService
     private readonly ILogger<UserService> _logger;
     private readonly ICurrentUserService _currentUserService;
 
-    public UserService(ApplicationDbContext context,ICurrentUserService currentUserService, IMapper mapper, IConfiguration configuration, ILogger<UserService> logger)
+    public UserService(ApplicationDbContext context, ICurrentUserService currentUserService, IMapper mapper, IConfiguration configuration, ILogger<UserService> logger)
     {
         _context = context;
         _mapper = mapper;
@@ -117,10 +117,10 @@ public class UserService : IUserService
 
         var claims = new[]
         {
-    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-    new Claim(ClaimTypes.Email, user.Email),
-    new Claim(ClaimTypes.Name, user.UserName)
-};
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Name, user.UserName)
+        };
 
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

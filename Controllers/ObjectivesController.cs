@@ -26,6 +26,7 @@ namespace TravelSBE.Controllers
         {
             return await _objectiveService.GetObjectivesAsync(search, page, pageSize);
         }
+
         [HttpGet("GetObjectivesForModel")]
         public async Task<List<SimpleObjective>> GetObjectivesForModel(string? search)
         {

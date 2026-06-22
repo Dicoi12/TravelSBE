@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using TravelSBE.Entity.Helper;
 
 namespace TravelSBE.Entity
@@ -17,6 +18,7 @@ namespace TravelSBE.Entity
 
         [ForeignKey("Itinerary")]
         public int? IdItinerary { get; set; }
+        [JsonIgnore]
         public Itinerary? Itinerary { get; set; }
 
         [ForeignKey("Objective")]
